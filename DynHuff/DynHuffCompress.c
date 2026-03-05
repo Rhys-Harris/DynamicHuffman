@@ -280,11 +280,18 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 		return 1;
 	}
 
+	printf("Destroying symbol counts\n");
+	free(entries);
+
+	// Pick root, allowing us to remove nodes array
+	DynNode root = nodes[0];
+
 	printf("Destroying nodes\n");
 	free(nodes);
 
-	printf("Destroying symbol counts\n");
-	free(entries);
+	// Get the number of nodes
+	numNodes = countNodes(&root);
+	printf("Tree made of %i nodes\n", numNodes);
 
 	return 1;
 }
