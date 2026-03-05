@@ -52,9 +52,10 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 	}
 
 	// TODO: Have this work for more than just a pair
+	// TODO: Possibly take to own function?
 	printf("Finding consistent patterns\n");
 	for (int i = 0; i < uniques; ++i) {
-		DynHuffEntry entry = entries[i];
+		DynHuffEntry *entry = entries+i;
 
 		char matcher = -1;
 		bool doneFirstMatch = false;
@@ -62,7 +63,7 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 
 		// Check, is this symbol always followed by the same character?
 		for (int j = 0; j < dataLen; ++j) {
-			if (text[j] != entry.symbol[0]) {
+			if (text[j] != entry->symbol[0]) {
 				continue;
 			}
 
@@ -84,11 +85,42 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 			continue;
 		}
 
-		// TODO:Now, we double check this pattern
+		// Did we just try to match ourselves??
+		if (matcher == entry->symbol[0]) {
+			continue;
+		}
 
+		DynHuffEntry *other = searchForMatchingHuffEntry(entries, uniques, entry->symbol, entry->symbolLen);
+		if (other == NULL) {
+			// Shouldn't happen, but safer
+			printf("ERR: Couldn't find entry\n");
+			continue;
+		}
+
+		// Now, we double check this pattern
+		// (e.g., does this other always occur with this preceding)
+		if (other->count != entry->count) {
+			continue;
+		}
+
+		// Merge results!
+		entry->symbol[1] = other->symbol[0];
+		entry->symbolLen++;
+
+		// Delete other
+		int otherIndex = entries-other;
+		--uniques;
+		for (int j = otherIndex; j < uniques; ++j) {
+			// Copy over each entry one back
+			entries[j] = entries[j+1];
+		}
+
+		// Were we moved back?
+		if (otherIndex < i) {
+			// Move back with it
+			--i;
+		}
 	}
-	
-	// Join together the patterns
 
 	return entries;
 }
