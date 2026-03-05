@@ -364,6 +364,30 @@ errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStr
 	writeInt32ToBuff(lastByteIndex, 8, (unsigned char*)out);
 	out[12] = lastBitIndex;
 
+	// Write table
+	printf("Writing table\n");
+	int buffIndex = 13;
+	for (int i = 0; i < numNodes; ++i) {
+		DynWriteNode *node = nodeList+i;
+		
+		// 0 -> 3
+		writeInt32ToBuff(node->parent, buffIndex, (unsigned char*)out);
+		buffIndex += 4;
+
+		// 4
+		out[buffIndex] = (char)node->symbolLen;
+		++buffIndex;
+
+		// 5
+		out[buffIndex] = (char)node->isRight;
+		++buffIndex;
+
+		// 6->
+		for (int j = 0; j < node->symbolLen; ++j, ++buffIndex) {
+			out[buffIndex] = node->symbol[j];
+		}
+	}
+
 	*outOut = out;
 	*outLen = bytesNeeded;
 
