@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define MAX_CHARS_PER_WRITE_NODE 264
+
 typedef struct DynWriteNode {
 	int parent;
 	unsigned char symbolLen;

@@ -5,6 +5,7 @@
 #include "DynHuffEntry.h"
 #include "DynNode.h"
 #include "CompStream.h"
+#include "DynWriteNode.h"
 
 #include "DynHuffCompress.h"
 
@@ -298,7 +299,47 @@ DynWriteNode *createWriteTable(DynNode *root, const int numNodes) {
 	return nodeList;
 }
 
+int calcTableWriteSize(DynWriteNode *nodeList, const int numNodes) {
+	int total = 0;
+
+	for (int i = 0; i < numNodes; ++i) {
+		total += 
+			4 + // Parent's index
+			1 + // Left or right node
+			1 + // Symbol length
+			nodeList[i].symbolLen; // Characters
+	}
+
+	return total;
+}
+
+int calcBytesNeededForWrite(DynWriteNode *nodeList, const int numNodes, CompStream stream) {
+	const int bytesForMetadata = 
+		4 + // Number of nodes
+		4 + // Original file size
+		4 + // Last byte index
+		1;  // Last bit index
+
+	const int bytesForTable = calcTableWriteSize(nodeList, numNodes);
+
+	const int bytesForStream = stream.length;
+
+	const int bytesNeeded = 
+		bytesForMetadata +
+		bytesForTable +
+		bytesForStream;
+
+	printf("Output bytes needed: %i\n", bytesNeeded);
+	printf("\tMETAD: %i\n", bytesForMetadata);
+	printf("\tTABLE: %i\n", bytesForTable);
+	printf("\tCDATA: %i\n", bytesForStream);
+
+	return bytesNeeded;
+}
+
 errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, char **outOut, int *outLen) {
+	const int bytesNeeded = calcBytesNeededForWrite(nodeList, numNodes, stream);
+
 	return 0;
 }
 
