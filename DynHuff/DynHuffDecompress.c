@@ -8,7 +8,7 @@
 
 #include "DynHuffDecompress.h"
 
-#define MAX_CHARS 100000
+#define MAX_CHARS 500000
 
 // Returns the index of the first char after the table
 int readInNodeTable(DynWriteNode *rawTable, const byte *compText, const int numNodes) {
@@ -70,7 +70,7 @@ DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) 
 	return table;
 }
 
-int decompress(const byte *inText, byte *out, int outLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
+int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
 	int curByte = 0;
 	int curBit = 0;
 
@@ -90,6 +90,10 @@ int decompress(const byte *inText, byte *out, int outLength, DynReadNode *table,
 		// Hit a leaf!
 		if (curNode->left == 0 && curNode->right == 0) {
 			for (int i = 0; i < curNode->symbolLen; ++i) {
+				if (outLen == maxLength) {
+					printf("ERR: Ran out of output space!\n");
+					return outLen;
+				}
 				out[outLen] = curNode->symbol[i];
 				++outLen;
 			}
@@ -119,7 +123,7 @@ errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
 	byte text[MAX_CHARS];
 	memset(text, 0, MAX_CHARS);
 
-	fread(text, sizeof(byte), MAX_CHARS, f);
+	printf("Read %lli bytes\n", fread(text, sizeof(byte), MAX_CHARS, f));
 
 	fclose(f);
 

@@ -11,7 +11,7 @@
 #include "DynHuffCompress.h"
 
 #define MAX_CHARS 500000
-#define OUT_TEXT_MAX_SIZE 100000
+#define OUT_TEXT_MAX_SIZE 1000000
 
 // Returns the complete table, giving count for each char
 DynHuffEntry *getUniqueSymbols(const byte *text, const int dataLen, int *numSymbols) {
@@ -22,7 +22,7 @@ DynHuffEntry *getUniqueSymbols(const byte *text, const int dataLen, int *numSymb
 	memset(staticTable, 0, 256*sizeof(int));
 
 	// Count each symbol
-	for (int i = 0; text[i] != 0; ++i) {
+	for (int i = 0; i < dataLen; ++i) {
 		staticTable[text[i]]++;
 	}
 
@@ -439,36 +439,36 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		return 1;
 	}
 
-	printf("\nTABLE\n");
-	for (int i = 0; i < numSymbols; ++i) {
-		if (entries[i].symbolLen == 1) {
-			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-		} else {
-			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-		}
-	}
+	// printf("\nTABLE\n");
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
 
 	numSymbols = mergeConsistentPatterns(entries, numSymbols, text, dataLen);
 
-	printf("\nTABLE\n");
-	for (int i = 0; i < numSymbols; ++i) {
-		if (entries[i].symbolLen == 1) {
-			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-		} else {
-			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-		}
-	}
+	// printf("\nTABLE\n");
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
 
 	sortEntries(entries, numSymbols);
 
-	printf("\nTABLE\n");
-	for (int i = 0; i < numSymbols; ++i) {
-		if (entries[i].symbolLen == 1) {
-			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-		} else {
-			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-		}
-	}
+	// printf("\nTABLE\n");
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
 
 	DynNode *nodes = malloc(numSymbols*sizeof(DynNode));
 	if (nodes == NULL) {
