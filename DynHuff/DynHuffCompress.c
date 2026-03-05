@@ -1,16 +1,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+// #include <fileapi.h>
 
 #include "DynHuffEntry.h"
 #include "DynNode.h"
 #include "CompStream.h"
 #include "DynWriteNode.h"
 #include "../BufView.h"
+#include "../FRead.h"
 
 #include "DynHuffCompress.h"
 
-#define MAX_CHARS 500000
 #define OUT_TEXT_MAX_SIZE 1000000
 
 // Returns the complete table, giving count for each char
@@ -413,22 +414,12 @@ errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStr
 }
 
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
-	// Read in text
-	FILE *f;
-	if (fopen_s(&f, infilename, "rb")) {
-		printf("Couldn't open input file\n");
-		return 1;
-	}
-
-	byte text[MAX_CHARS];
-	memset(text, 0, MAX_CHARS);
-
-	const int dataLen = (int)fread(text, sizeof(byte), MAX_CHARS, f);
-	printf("Read %i characters\n", dataLen);
-
-	fclose(f);
-
-	return dynHuffCompress(text, outfilename, dataLen);
+	byte *text;
+	long dataLen;
+	errno_t err = FReadWhole(infilename, &text, &dataLen);
+	err = dynHuffCompress(text, outfilename, dataLen);
+	free(text);
+	return err;
 }
 
 errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dataLen) {

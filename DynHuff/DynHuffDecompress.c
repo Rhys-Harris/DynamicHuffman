@@ -2,13 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../FRead.h"
 #include "../BufView.h"
 #include "DynWriteNode.h"
 #include "DynReadNode.h"
 
 #include "DynHuffDecompress.h"
-
-#define MAX_CHARS 500000
 
 // Returns the index of the first char after the table
 int readInNodeTable(DynWriteNode *rawTable, const byte *compText, const int numNodes) {
@@ -113,21 +112,12 @@ int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table,
 }
 
 errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
-	// Read in text
-	FILE *f;
-	if (fopen_s(&f, infilename, "rb")) {
-		printf("Couldn't open input file\n");
-		return 1;
-	}
-
-	byte text[MAX_CHARS];
-	memset(text, 0, MAX_CHARS);
-
-	printf("Read %lli bytes\n", fread(text, sizeof(byte), MAX_CHARS, f));
-
-	fclose(f);
-
-	return dynHuffDecompress(text, outfilename);
+	byte *text;
+	long dataLen;
+	errno_t err = FReadWhole(infilename, &text, &dataLen);
+	err = dynHuffDecompress(text, outfilename);
+	free(text);
+	return err;
 }
 
 errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
