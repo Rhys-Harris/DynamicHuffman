@@ -1,6 +1,21 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "DynNode.h"
+
+bool nodeFitsDesc(DynNode *node, const char symbol[255], const int symbolLen) {
+	if (node->symbolLen != symbolLen) {
+		return false;
+	}
+
+	for (int i = 0; i < symbolLen; ++i) {
+		if (node->symbol[i] != symbol[i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
 
 void destroyNode(DynNode *node) {
 	if (node->left != NULL) {
@@ -40,4 +55,42 @@ void fixParents(DynNode *node) {
 		node->right->parent = node;
 		node->left->isRight = true;
 	}
+}
+
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const char symbol[255], const int symbolLen) {
+	if (*pathLen == MAX_NODE_DEPTH) {
+		printf("Ran out of path space\n");
+		return false;
+	}
+
+	// Add this node to the stack
+	nodePath[*pathLen] = *node;
+	++(*pathLen);
+
+	// Check left
+	if (node->left != NULL) {
+		bool found = findPathForSymbol(nodePath, node->left, pathLen, symbol, symbolLen);
+		if (found) {
+			return true;
+		}
+	}
+
+	// Check right
+	if (node->right != NULL) {
+		bool found = findPathForSymbol(nodePath, node->right, pathLen, symbol, symbolLen);
+		if (found) {
+			return true;
+		}
+	}
+
+	// Check self
+	if (nodeFitsDesc(node, symbol, symbolLen)) {
+		return true;
+	}
+
+	// Pop off the stack
+	--(*pathLen);
+	
+	// Return a fail
+	return false;
 }
