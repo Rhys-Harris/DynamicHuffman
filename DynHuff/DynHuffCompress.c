@@ -51,7 +51,42 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 		++tableIndex;
 	}
 
-	// Find consistent patterns
+	// TODO: Have this work for more than just a pair
+	printf("Finding consistent patterns\n");
+	for (int i = 0; i < uniques; ++i) {
+		DynHuffEntry entry = entries[i];
+
+		char matcher = -1;
+		bool doneFirstMatch = false;
+		bool patternFound = false;
+
+		// Check, is this symbol always followed by the same character?
+		for (int j = 0; j < dataLen; ++j) {
+			if (text[j] != entry.symbol[0]) {
+				continue;
+			}
+
+			if (!doneFirstMatch) {
+				matcher = text[j+1];
+				patternFound = true;
+				doneFirstMatch = true;
+				continue;
+			}
+
+			if (matcher != text[j+1]) {
+				patternFound = false;
+				break;
+			}
+		}
+
+		// Couldn't find a consistent pattern
+		if (!patternFound) {
+			continue;
+		}
+
+		// TODO:Now, we double check this pattern
+
+	}
 	
 	// Join together the patterns
 
