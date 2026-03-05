@@ -388,6 +388,12 @@ errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStr
 		}
 	}
 
+	// Write compressed text
+	printf("Writing compressed text\n");
+	for (int i = 0; i <= lastByteIndex; ++i, ++buffIndex) {
+		out[buffIndex] = stream.text[i];
+	}
+
 	*outOut = out;
 	*outLen = bytesNeeded;
 
@@ -495,10 +501,9 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 	printf("Destroying write node list\n");
 	free(nodeList);
 
-
 	// Destroy final buffer
 	printf("Destroying output buffer\n");
 	free(out);
 
-	return 1;
+	return 0;
 }
