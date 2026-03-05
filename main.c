@@ -18,7 +18,7 @@ errno_t testHuffMethod(const char infilename[]) {
 	printf("\n\n");
 
 	clock_t t3 = clock();
-	if (dynHuffDecompressFile("./compoutputs/out.dynhuff", "./finaloutputs/outdyn.txt")) {
+	if (dynHuffDecompressFile("./compoutputs/out.dynhuff", "./finaloutputs/outdyn.mp4")) {
 		printf("Couldn't decompress\n");
 		return 1;
 	}
@@ -35,7 +35,7 @@ errno_t testHuffMethod(const char infilename[]) {
 }
 
 int main(const int argc, char *argv[]) {
-	const char infilename[] = "./inputs/cheem.webp";
+	const char infilename[] = "./inputs/bayblades.mp4";
 
 	if (testHuffMethod(infilename)) {
 		printf("Fail on testing dynamic huff\n");

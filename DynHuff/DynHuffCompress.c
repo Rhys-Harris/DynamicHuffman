@@ -95,6 +95,9 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const byte *text
 		bool doneFirstMatch = false;
 		bool patternFound = false;
 
+		// TODO: Check all possibly next chars, and go from there
+		// Also merge if freq(AB) > freq(A)/2 && freq(AB) > freq(B)/2
+
 		// Check, is this symbol always followed by the same character?
 		for (int j = 0; j < dataLen; ++j) {
 			if (!strMatchFoundAtPoint(text+j, entry->symbol, entry->symbolLen)) {
@@ -252,6 +255,43 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
+errno_t calcLeafNodePaths(DynNode **leafNodes, const int numLeafNodes, const int MAX_NODE_DEPTH, int **outPathLens, byte **outPaths) {
+	int *pathLens = malloc(numLeafNodes*sizeof(int));
+	if (pathLens == NULL) {
+		printf("Couldn't allocate mem for path lengths\n");
+		return 1;
+	}
+
+	byte *paths = malloc(numLeafNodes*MAX_NODE_DEPTH*sizeof(byte));
+	if (paths == NULL) {
+		printf("Couldn't allocate mem for paths\n");
+		return 1;
+	}
+
+	for (int i = 0; i < numLeafNodes; ++i) {
+		int pathLen = 0;
+		int buffIndex = MAX_NODE_DEPTH*i;
+
+		DynNode *curNode = leafNodes[i];
+
+		// Bake path into an array
+		while (curNode->parent != NULL) {
+			paths[buffIndex] = curNode->isRight;
+			curNode = curNode->parent;
+			++pathLen;
+			++buffIndex;
+		}
+
+		paths[i] = pathLen;
+	}
+
+	*outPathLens = pathLens;
+	*outPaths = paths;
+
+	return 0;
+}
+
+// OPTIMIZE: Calc all leaf node paths beforehand
 CompStream createCompressedText(const byte *text, const int dataLen, DynNode **leafNodes, int leafNodeLookup[256], const int MAX_NODE_DEPTH) {
 	printf("Creating comp stream\n");
 
