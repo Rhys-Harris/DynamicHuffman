@@ -144,6 +144,18 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 	return uniques;
 }
 
+void sortEntries(DynHuffEntry *entries, const int numSymbols) {
+	for (int i = 0; i < numSymbols-1; ++i) {
+		for (int j = 1; j < numSymbols-i; ++j) {
+			if (entries[j-1].count < entries[j].count) {
+				const DynHuffEntry temp = entries[j-1];
+				entries[j-1] = entries[j];
+				entries[j] = temp;
+			}
+		}
+	}
+}
+
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -171,6 +183,8 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 	}
 
 	numSymbols = mergeConsistentPatterns(entries, numSymbols, text, dataLen);
+
+	sortEntries(entries, numSymbols);
 
 	for (int i = 0; i < numSymbols; ++i) {
 		if (entries[i].symbolLen == 1) {
