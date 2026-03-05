@@ -110,7 +110,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 	// Return a fail
 	return false;
 }
-#else
+#elif 1
 bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol, const int MAX_NODE_DEPTH) {
 	if (*pathLen == MAX_NODE_DEPTH) {
 		printf("Ran out of path space\n");
@@ -182,4 +182,39 @@ void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int maxNodes, 
 		// Place right side in
 		placeNodeInList(node->right, nodeList, maxNodes, curNodeIndex, thisIndex);
 	}
+}
+
+void recFindAllLeafNodes(DynNode *node, DynNode **leafNodes, int *curLeafNode) {
+	bool leaf = true;
+
+	if (node->left != NULL) {
+		leaf = false;
+		recFindAllLeafNodes(node->left, leafNodes, curLeafNode);
+	}
+
+	if (node->right != NULL) {
+		leaf = false;
+		recFindAllLeafNodes(node->right, leafNodes, curLeafNode);
+	}
+
+	if (!leaf) {
+		return;
+	}
+
+	leafNodes[*curLeafNode] = node;
+	++(*curLeafNode);
+}
+
+DynNode **findAllLeafNodes(DynNode *node, const int numLeafNodes) {
+	DynNode **leafNodes = malloc(numLeafNodes*sizeof(DynNode*));
+	if (leafNodes == NULL) {
+		printf("Couldn't allocate leaf nodes\n");
+		return NULL;
+	}
+
+	int curLeafNode = 0;
+
+	recFindAllLeafNodes(node, leafNodes, &curLeafNode);
+
+	return leafNodes;
 }

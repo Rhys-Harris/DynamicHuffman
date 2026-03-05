@@ -1,7 +1,12 @@
+#include "../config.h"
+
+#if TIME_COMP
+#include <time.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-// #include <fileapi.h>
 
 #include "DynHuffEntry.h"
 #include "DynNode.h"
@@ -434,12 +439,20 @@ errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 }
 
 errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dataLen) {
+	#ifdef TIME_COMP
+	clock_t t1 = clock();
+	#endif
+
 	int numSymbols;
 	DynHuffEntry *entries = getUniqueSymbols(text, dataLen, &numSymbols);
 	if (entries == NULL) {
 		printf("Couldn't get unique symbols\n");
 		return 1;
 	}
+
+	#ifdef TIME_COMP
+	clock_t t2 = clock();
+	#endif
 
 	// printf("\nTABLE\n");
 	// for (int i = 0; i < numSymbols; ++i) {
@@ -461,7 +474,15 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	// 	}
 	// }
 
+	#ifdef TIME_COMP
+	clock_t t3 = clock();
+	#endif
+
 	sortEntries(entries, numSymbols);
+
+	#ifdef TIME_COMP
+	clock_t t4 = clock();
+	#endif
 
 	// printf("\nTABLE\n");
 	// for (int i = 0; i < numSymbols; ++i) {
@@ -478,12 +499,17 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		return 1;
 	}
 	int numNodes = 0;
+	const int numLeafNodes = numSymbols;
 
 	errno_t err = createHuffmanTree(nodes, entries, numSymbols, &numNodes);
 	if (err) {
 		printf("Couldn't create huffman tree\n");
 		return 1;
 	}
+
+	#ifdef TIME_COMP
+	clock_t t5 = clock();
+	#endif
 
 	printf("Destroying symbol counts\n");
 	free(entries);
@@ -502,6 +528,10 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("Fixing parents\n");
 	fixParents(&root);
 
+	#ifdef TIME_COMP
+	clock_t t6 = clock();
+	#endif
+
 	// Use the tree to compress the data
 	CompStream stream = createCompressedText(text, dataLen, &root);
 	if (stream.text == NULL) {
@@ -510,8 +540,16 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	}
 	printf("Compressed Text Length: %i\n", stream.length);
 
+	#ifdef TIME_COMP
+	clock_t t7 = clock();
+	#endif
+
 	// Compress tree to a writable table
 	DynWriteNode *nodeList = createWriteTable(&root, numNodes);
+
+	#ifdef TIME_COMP
+	clock_t t8 = clock();
+	#endif
 
 	// Destroy the huffman tree
 	printf("Destroying huffman tree\n");
@@ -524,6 +562,10 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		printf("Couldn't write data to buffer\n");
 		return 1;
 	}
+
+	#ifdef TIME_COMP
+	clock_t t9 = clock();
+	#endif
 
 	// Destroy comp text buffer
 	printf("Destroying comp text buffer\n");
@@ -543,6 +585,16 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	// Destroy final buffer
 	printf("Destroying output buffer\n");
 	free(out);
+
+	printf("COMP TIME:\n");
+	printf("\tUNIQUE SYMBOLS:\t%lis (%lims)\n", (t2-t1)/CLOCKS_PER_SEC, t2-t1);
+	printf("\tMERGE PATTERNS:\t%lis (%lims)\n", (t3-t2)/CLOCKS_PER_SEC, t3-t2);
+	printf("\tSORT ENTRIES  :\t%lis (%lims)\n", (t4-t3)/CLOCKS_PER_SEC, t4-t3);
+	printf("\tTREE CREATION :\t%lis (%lims)\n", (t5-t4)/CLOCKS_PER_SEC, t5-t4);
+	printf("\tCOUNT & FIX   :\t%lis (%lims)\n", (t6-t5)/CLOCKS_PER_SEC, t6-t5);
+	printf("\tCOMPRESS      :\t%lis (%lims)\n", (t7-t6)/CLOCKS_PER_SEC, t7-t6);
+	printf("\tWRITE TABLE   :\t%lis (%lims)\n", (t8-t7)/CLOCKS_PER_SEC, t8-t7);
+	printf("\tBUFFER WRITE  :\t%lis (%lims)\n", (t9-t8)/CLOCKS_PER_SEC, t9-t8);
 
 	return 0;
 }

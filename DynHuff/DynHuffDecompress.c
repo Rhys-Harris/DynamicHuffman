@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time.h>
+
 #include "../FRead.h"
 #include "../FWrite.h"
 #include "../BufView.h"

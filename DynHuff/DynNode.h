@@ -25,6 +25,8 @@ typedef struct DynNode {
 	byte symbol[255];
 } DynNode;
 
+DynNode **findAllLeafNodes(DynNode *node, const int numLeafNodes);
+
 int nodeHeight(const DynNode *node);
 
 // Recursively frees this node's children, then itself
