@@ -6,6 +6,7 @@
 #include "DynNode.h"
 #include "CompStream.h"
 #include "DynWriteNode.h"
+#include "../BufView.h"
 
 #include "DynHuffCompress.h"
 
@@ -337,7 +338,7 @@ int calcBytesNeededForWrite(DynWriteNode *nodeList, const int numNodes, CompStre
 	return bytesNeeded;
 }
 
-errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, char **outOut, int *outLen) {
+errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, const int dataLen, char **outOut, int *outLen) {
 	const int bytesNeeded = calcBytesNeededForWrite(nodeList, numNodes, stream);
 
 	int lastByteIndex = stream.nextByteIndex;
@@ -355,6 +356,13 @@ errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStr
 
 	printf("Allocating final string\n");
 	char *out = malloc(bytesNeeded);
+
+	// Write metadata
+	printf("Writing metadata\n");
+	writeInt32ToBuff(numNodes, 0, (unsigned char*)out);
+	writeInt32ToBuff(dataLen, 4, (unsigned char*)out);
+	writeInt32ToBuff(lastByteIndex, 8, (unsigned char*)out);
+	out[12] = lastBitIndex;
 
 	*outOut = out;
 	*outLen = bytesNeeded;
@@ -449,7 +457,7 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 
 	char *out;
 	int outLen;
-	err = writeAllDataToBuffer(nodeList, numNodes, stream, &out, &outLen);
+	err = writeAllDataToBuffer(nodeList, numNodes, stream, dataLen, &out, &outLen);
 	if (err) {
 		printf("Couldn't write data to buffer\n");
 		return 1;
