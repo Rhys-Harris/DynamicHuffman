@@ -252,7 +252,7 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
-CompStream createCompressedText(const byte *text, const int dataLen, DynNode **leafNodes, int leafNodeLookup[255], const int MAX_NODE_DEPTH) {
+CompStream createCompressedText(const byte *text, const int dataLen, DynNode **leafNodes, int leafNodeLookup[256], const int MAX_NODE_DEPTH) {
 	printf("Creating comp stream\n");
 
 	// Output scales with input size
@@ -273,6 +273,10 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode **l
 
 	for (int i = 0; i < dataLen; i += addition) {
 		const int leafNodeIndex = leafNodeLookup[text[i]];
+		if (leafNodeIndex == -1) {
+			printf("Bad index!!\n");
+			exit(1);
+		}
 
 		DynNode *curNode = leafNodes[leafNodeIndex];
 
@@ -543,8 +547,8 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	DynNode **leafNodes = findAllLeafNodes(&root, numLeafNodes);
 
 	// Pre-calc all needed indicies
-	int leafNodeLookup[255];
-	for (int i = 0; i < 255; ++i) {
+	int leafNodeLookup[256];
+	for (int i = 0; i < 256; ++i) {
 		leafNodeLookup[i] = findNodeStaringWithSymbol(leafNodes, numLeafNodes, (byte)i);
 	}
 
