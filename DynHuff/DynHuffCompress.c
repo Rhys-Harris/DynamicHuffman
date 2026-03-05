@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "DynHuffEntry.h"
+#include "DynNode.h"
 
 #include "DynHuffCompress.h"
 
@@ -156,6 +157,78 @@ void sortEntries(DynHuffEntry *entries, const int numSymbols) {
 	}
 }
 
+errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int numSymbols, int *outNumNodes) {
+	int numNodes = numSymbols;
+
+	for (int i = 0; i < numSymbols; ++i) {
+		nodes[i].parent = NULL;
+		nodes[i].left = NULL;
+		nodes[i].right = NULL;
+		nodes[i].count = entries[i].count;
+		nodes[i].isRight = false;
+		nodes[i].symbolLen = entries[i].symbolLen;
+		memcpy(nodes[i].symbol, entries[i].symbol, entries[i].symbolLen);
+	}
+
+	int i = numNodes-1;
+
+	// While there are at least 2 root nodes
+	printf("Creating huffman tree\n");
+	while (i >= 1) {
+		DynNode nodeA = nodes[i-1];
+		DynNode nodeB = nodes[i];
+
+		// Create a new parent node
+		DynNode parent = (DynNode){NULL, NULL, NULL, nodeA.count + nodeB.count, false, 0};
+
+		// Allocate space for each child node
+		parent.left = malloc(sizeof(DynNode));
+		if (parent.left == NULL) {
+			printf("Couldn't allocate memory\n");
+			return 1;
+		}
+
+		parent.right = malloc(sizeof(DynNode));
+		if (parent.right == NULL) {
+			printf("Couldn't allocate memory\n");
+			return 1;
+		}
+
+		// Place in the children
+		*parent.left = nodeA;
+		*parent.right = nodeB;
+
+		// Take the nodes out of the array
+		numNodes -= 2;
+
+		// Find index to place new parent
+		int j = 0;
+		while (j < numNodes) {
+			if (nodes[j].count < parent.count) {
+				break;
+			}
+			++j;
+		}
+		
+		// Move everything over
+		for (int k = numNodes-1; k >= j; --k) {
+			nodes[k+1] = nodes[k];
+		}
+
+		// Place parent in
+		nodes[j] = parent;
+		
+		// Increase length to include new node
+		++numNodes;
+
+		--i;
+	}
+
+	*outNumNodes = numNodes;
+
+	return 0;
+}
+
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -186,13 +259,29 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 
 	sortEntries(entries, numSymbols);
 
-	for (int i = 0; i < numSymbols; ++i) {
-		if (entries[i].symbolLen == 1) {
-			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-		} else {
-			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-		}
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
+
+	DynNode *nodes = malloc(numSymbols*sizeof(DynNode));
+	if (nodes == NULL) {
+		printf("Couldn't allocate nodes for huffman tree\n");
+		return 1;
 	}
+	int numNodes = 0;
+
+	errno_t err = createHuffmanTree(nodes, entries, numSymbols, &numNodes);
+	if (err) {
+		printf("Couldn't create huffman tree\n");
+		return 1;
+	}
+
+	printf("Destroying nodes\n");
+	free(nodes);
 
 	printf("Destroying symbol counts\n");
 	free(entries);

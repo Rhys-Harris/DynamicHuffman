@@ -6,7 +6,7 @@
 #include "./DynWriteNode.h"
 
 // Maximum number of nodes that can be in the huffman tree
-#define MAX_NODES 10000
+#define MAX_NODES 1000
 
 // Maximum height of the huffman tree
 #define MAX_NODE_DEPTH 100
@@ -18,11 +18,11 @@ typedef struct DynNode {
 	DynNode *left;
 	DynNode *right;
 
-	int symbolLen;
-	char symbol[255];
-
 	int count;
 	bool isRight;
+
+	int symbolLen;
+	char symbol[255];
 } DynNode;
 
 // Recursively frees this node's children, then itself
