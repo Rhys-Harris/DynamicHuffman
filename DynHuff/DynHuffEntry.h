@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 typedef struct DynHuffEntry {
-		int symbolLen;
+		unsigned char symbolLen;
 		char symbol[255];
 		int count;
 } DynHuffEntry;
