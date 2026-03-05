@@ -4,6 +4,7 @@
 
 #include "../BufView.h"
 #include "DynWriteNode.h"
+#include "DynReadNode.h"
 
 #include "DynHuffDecompress.h"
 
@@ -35,6 +36,34 @@ void readInNodeTable(DynWriteNode *rawTable, const char *compText, const int num
 			node->symbol[j] = compText[buffIndex];
 		}
 	}
+}
+
+DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) {
+	printf("Converting to readable table\n");
+	DynReadNode *table = calloc(numNodes, sizeof(DynReadNode));
+	if (table == NULL) {
+		printf("Couldn't allocate table\n");
+		return NULL;
+	}
+
+	printf("Converting...\n");
+
+	for (int i = 0; i < numNodes; ++i) {
+		DynWriteNode *wn = rawTable+i;
+
+		memcpy(table[i].symbol, wn->symbol, wn->symbolLen);
+		if (wn->parent == -1) {
+			continue;
+		}
+
+		if (wn->isRight) {
+			table[wn->parent].right = i;
+		} else {
+			table[wn->parent].left = i;
+		}
+	}
+
+	return table;
 }
 
 errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
@@ -78,9 +107,19 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 
 	readInNodeTable(rawTable, compText, numNodes);
 
+	DynReadNode *table = convertToReadableTable(numNodes, rawTable);
+	if (table == NULL) {
+		printf("Couldn't convert table\n");
+		return 1;
+	}
+
 	// Destroy write nodes
 	printf("Destroying raw table\n");
 	free(rawTable);
+
+	// Destroy table
+	printf("Destroying table\n");
+	free(table);
 
 	return 0;
 }
