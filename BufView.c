@@ -1,31 +1,33 @@
-void writeInt16ToBuff(short i, int index, unsigned char *buff) {
-	buff[index] = (unsigned char)(i>>8);
-	buff[index+1] = (unsigned char)(i);
+#include "./BufView.h"
+
+void writeInt16ToBuff(uint16 i, int index, byte *buff) {
+	buff[index] = (byte)(i>>8);
+	buff[index+1] = (byte)(i);
 }
 
-void writeInt32ToBuff(int i, int index, unsigned char *buff) {
-	buff[index] = (unsigned char)(i>>24);
-	buff[index+1] = (unsigned char)(i>>16);
-	buff[index+2] = (unsigned char)(i>>8);
-	buff[index+3] = (unsigned char)(i);
+void writeInt32ToBuff(uint32 i, int index, byte *buff) {
+	buff[index] = (byte)(i>>24);
+	buff[index+1] = (byte)(i>>16);
+	buff[index+2] = (byte)(i>>8);
+	buff[index+3] = (byte)(i);
 }
 
-int readInt16FromBuff(const int index, const unsigned char *buff) {
-	short i = 0;
+uint16 readInt16FromBuff(const int index, const byte *buff) {
+	uint16 i = 0;
 
-	i |= ((int)(buff[index])<<8);
-	i |= ((int)buff[index+1]);
+	i |= ((uint16)(buff[index])<<8);
+	i |= ((uint16)buff[index+1]);
 
 	return i;
 }
 
-int readInt32FromBuff(const int index, const unsigned char *buff) {
-	int i = 0;
+uint32 readInt32FromBuff(const int index, const byte *buff) {
+	uint32 i = 0;
 
-	i |= ((int)(buff[index])<<24);
-	i |= ((int)(buff[index+1])<<16);
-	i |= ((int)(buff[index+2])<<8);
-	i |= ((int)buff[index+3]);
+	i |= ((uint32)(buff[index])<<24);
+	i |= ((uint32)(buff[index+1])<<16);
+	i |= ((uint32)(buff[index+2])<<8);
+	i |= ((uint32)buff[index+3]);
 
 	return i;
 }

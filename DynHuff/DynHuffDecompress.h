@@ -3,7 +3,9 @@
 
 #include <corecrt.h>
 
-errno_t dynHuffDecompress(const char *compText, const char *outfilename);
+#include "../def.h"
+
+errno_t dynHuffDecompress(const byte *compText, const char *outfilename);
 
 errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename);
 

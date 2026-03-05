@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#include "../def.h"
 #include "./DynWriteNode.h"
 
 #define DEV_MULTI_CHAR 0
@@ -24,7 +25,7 @@ typedef struct DynNode {
 	bool isRight;
 
 	int symbolLen;
-	char symbol[255];
+	byte symbol[255];
 } DynNode;
 
 // Recursively frees this node's children, then itself
@@ -37,9 +38,9 @@ int countNodes(const DynNode *node);
 void fixParents(DynNode *node);
 
 #if DEV_MULTI_CHAR
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const char symbol[255], const int symbolLen);
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen);
 #else
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const char symbol);
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol);
 #endif
 
 void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int numNodes, int *curNodeIndex, int parent);

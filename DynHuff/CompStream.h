@@ -1,8 +1,10 @@
 #ifndef _COMP_STREAM_H_
 #define _COMP_STREAM_H_
 
+#include "../def.h"
+
 typedef struct CompStream {
-	char *text;
+	byte *text;
 	int nextByteIndex;
 	int nextBitIndex;
 	int length;

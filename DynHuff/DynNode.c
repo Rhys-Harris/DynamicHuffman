@@ -4,7 +4,7 @@
 
 #include "DynNode.h"
 
-bool nodeFitsDesc(DynNode *node, const char symbol[255], const int symbolLen) {
+bool nodeFitsDesc(DynNode *node, const byte symbol[255], const int symbolLen) {
 	if (node->symbolLen != symbolLen) {
 		return false;
 	}
@@ -59,7 +59,7 @@ void fixParents(DynNode *node) {
 }
 
 #if DEV_MULTI_CHAR
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const char symbol[255], const int symbolLen) {
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen) {
 	if (*pathLen == MAX_NODE_DEPTH) {
 		printf("Ran out of path space\n");
 		return false;
@@ -97,7 +97,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const cha
 	return false;
 }
 #else
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const char symbol) {
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol) {
 	if (*pathLen == MAX_NODE_DEPTH) {
 		printf("Ran out of path space\n");
 		return false;

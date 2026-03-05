@@ -10,11 +10,11 @@
 
 #include "DynHuffCompress.h"
 
-#define MAX_CHARS 100000
+#define MAX_CHARS 500000
 #define OUT_TEXT_MAX_SIZE 100000
 
 // Returns the complete table, giving count for each char
-DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymbols) {
+DynHuffEntry *getUniqueSymbols(const byte *text, const int dataLen, int *numSymbols) {
 	// Used to count each char
 	int staticTable[256];
 
@@ -50,7 +50,7 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 			continue;
 		}
 
-		entries[tableIndex].symbol[0] = (char)i;
+		entries[tableIndex].symbol[0] = (byte)i;
 		entries[tableIndex].symbolLen = 1;
 		entries[tableIndex].count = staticTable[i];
 		++tableIndex;
@@ -59,7 +59,7 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 	return entries;
 }
 
-bool strMatchFoundAtPoint(const char *strA, const char *strB, const int len) {
+bool strMatchFoundAtPoint(const byte *strA, const byte *strB, const int len) {
 	for (int i = 0; i < len; ++i) {
 		if (strA[i] != strB[i]) {
 			return false;
@@ -68,7 +68,7 @@ bool strMatchFoundAtPoint(const char *strA, const char *strB, const int len) {
 	return true;
 }
 
-bool charInString(const char c, const char *str, const int len) {
+bool charInString(const byte c, const byte *str, const int len) {
 	for (int i = 0; i < len; ++i) {
 		if (c == str[i]) {
 			return true;
@@ -77,13 +77,14 @@ bool charInString(const char c, const char *str, const int len) {
 	return false;
 }
 
-int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text, const int dataLen) {
+int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const byte *text, const int dataLen) {
+	// TODO: Deal with EOF
 	printf("Finding consistent patterns\n");
 
 	for (int i = 0; i < uniques; ++i) {
 		DynHuffEntry *entry = entries+i;
 
-		char matcher = -1;
+		byte matcher = -1;
 		bool doneFirstMatch = false;
 		bool patternFound = false;
 
@@ -120,6 +121,7 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 		if (other == NULL) {
 			// Shouldn't happen, but safer
 			printf("ERR: Couldn't find entry\n");
+			printf("'%c' (%i)\n", matcher, matcher);
 			continue;
 		}
 
@@ -150,12 +152,6 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 
 		// Try to match again
 		--i;
-
-		// // Were we moved back?
-		// if (otherIndex < i) {
-		// 	// Move back with it
-		// 	--i;
-		// }
 
 		// printf("Successful merge!\n");
 	}
@@ -249,9 +245,9 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
-CompStream createCompressedText(const char *text, const int dataLen, DynNode *root) {
+CompStream createCompressedText(const byte *text, const int dataLen, DynNode *root) {
 	CompStream out = EMPTY_COMP_STREAM;
-	out.text = calloc(OUT_TEXT_MAX_SIZE, sizeof(char));
+	out.text = calloc(OUT_TEXT_MAX_SIZE, sizeof(byte));
 	if (out.text == NULL) {
 		printf("Couldn't allocate memory\n");
 		return out;
@@ -272,7 +268,7 @@ CompStream createCompressedText(const char *text, const int dataLen, DynNode *ro
 		}
 
 		for (int j = 1; j < pathLen; ++j) {
-			unsigned char byte = 0;
+			byte byte = 0;
 			DynNode curNode = nodePath[j];
 
 			if (curNode.isRight) {
@@ -354,7 +350,7 @@ int calcBytesNeededForWrite(DynWriteNode *nodeList, const int numNodes, CompStre
 	return bytesNeeded;
 }
 
-errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, const int dataLen, char **outOut, int *outLen) {
+errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, const int dataLen, byte **outOut, int *outLen) {
 	const int bytesNeeded = calcBytesNeededForWrite(nodeList, numNodes, stream);
 
 	int lastByteIndex = stream.nextByteIndex;
@@ -371,13 +367,13 @@ errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStr
 	}
 
 	printf("Allocating final string\n");
-	char *out = malloc(bytesNeeded);
+	byte *out = malloc(bytesNeeded);
 
 	// Write metadata
 	printf("Writing metadata\n");
-	writeInt32ToBuff(numNodes, 0, (unsigned char*)out);
-	writeInt32ToBuff(dataLen, 4, (unsigned char*)out);
-	writeInt32ToBuff(lastByteIndex, 8, (unsigned char*)out);
+	writeInt32ToBuff(numNodes, 0, (byte*)out);
+	writeInt32ToBuff(dataLen, 4, (byte*)out);
+	writeInt32ToBuff(lastByteIndex, 8, (byte*)out);
 	out[12] = lastBitIndex;
 
 	// Write table
@@ -387,15 +383,15 @@ errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStr
 		DynWriteNode *node = nodeList+i;
 		
 		// 0 -> 3
-		writeInt32ToBuff(node->parent, buffIndex, (unsigned char*)out);
+		writeInt32ToBuff(node->parent, buffIndex, (byte*)out);
 		buffIndex += 4;
 
 		// 4
-		out[buffIndex] = (char)node->symbolLen;
+		out[buffIndex] = (byte)node->symbolLen;
 		++buffIndex;
 
 		// 5
-		out[buffIndex] = (char)node->isRight;
+		out[buffIndex] = (byte)node->isRight;
 		++buffIndex;
 
 		// 6->
@@ -424,17 +420,18 @@ errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 		return 1;
 	}
 
-	char text[MAX_CHARS];
+	byte text[MAX_CHARS];
 	memset(text, 0, MAX_CHARS);
 
-	const int dataLen = (int)fread(text, sizeof(char), MAX_CHARS, f);
+	const int dataLen = (int)fread(text, sizeof(byte), MAX_CHARS, f);
+	printf("Read %i characters\n", dataLen);
 
 	fclose(f);
 
 	return dynHuffCompress(text, outfilename, dataLen);
 }
 
-errno_t dynHuffCompress(const char *text, const char *outfilename, const int dataLen) {
+errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dataLen) {
 	int numSymbols;
 	DynHuffEntry *entries = getUniqueSymbols(text, dataLen, &numSymbols);
 	if (entries == NULL) {
@@ -520,7 +517,7 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 	printf("Destroying huffman tree\n");
 	destroyNode(&root);
 
-	char *out;
+	byte *out;
 	int outLen;
 	err = writeAllDataToBuffer(nodeList, numNodes, stream, dataLen, &out, &outLen);
 	if (err) {
@@ -544,7 +541,7 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 		printf("Couldn't open output file\n");
 		return 1;
 	}
-	fwrite(out, sizeof(char), outLen, f);
+	fwrite(out, sizeof(byte), outLen, f);
 	fclose(f);
 
 	printf("Done write\n\n");

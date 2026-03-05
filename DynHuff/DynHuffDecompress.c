@@ -11,7 +11,7 @@
 #define MAX_CHARS 100000
 
 // Returns the index of the first char after the table
-int readInNodeTable(DynWriteNode *rawTable, const char *compText, const int numNodes) {
+int readInNodeTable(DynWriteNode *rawTable, const byte *compText, const int numNodes) {
 	printf("Reading in table\n");
 
 	// Skip metadata
@@ -21,7 +21,7 @@ int readInNodeTable(DynWriteNode *rawTable, const char *compText, const int numN
 		DynWriteNode *node = rawTable+i;
 		
 		// 0 -> 3
-		node->parent = readInt32FromBuff(buffIndex, (const unsigned char*)compText);
+		node->parent = readInt32FromBuff(buffIndex, (byte*)compText);
 		buffIndex += 4;
 
 		// 4
@@ -70,7 +70,7 @@ DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) 
 	return table;
 }
 
-int decompress(const char *inText, char *out, int outLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
+int decompress(const byte *inText, byte *out, int outLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
 	int curByte = 0;
 	int curBit = 0;
 
@@ -79,7 +79,7 @@ int decompress(const char *inText, char *out, int outLength, DynReadNode *table,
 	int outLen = 0;
 
 	while (curByte < lastByteIndex || (curByte == lastByteIndex && curBit <= lastBitIndex)) {
-		const char bit = (char)(inText[curByte]>>(7-curBit))&1;
+		const byte bit = (byte)(inText[curByte]>>(7-curBit))&1;
 
 		if (bit == 1) {
 			curNode = table+curNode->right;
@@ -116,22 +116,22 @@ errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
 		return 1;
 	}
 
-	char text[MAX_CHARS];
+	byte text[MAX_CHARS];
 	memset(text, 0, MAX_CHARS);
 
-	fread(text, sizeof(char), MAX_CHARS, f);
+	fread(text, sizeof(byte), MAX_CHARS, f);
 
 	fclose(f);
 
 	return dynHuffDecompress(text, outfilename);
 }
 
-errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
+errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 	// Get metadata
 	printf("Getting metadata\n");
-	const int numNodes = readInt32FromBuff(0, (const unsigned char*)compText);
-	const int dataLen = readInt32FromBuff(4, (const unsigned char*)compText);
-	const int lastByteIndex = readInt32FromBuff(8, (const unsigned char*)compText);
+	const int numNodes = readInt32FromBuff(0, (const byte*)compText);
+	const int dataLen = readInt32FromBuff(4, (const byte*)compText);
+	const int lastByteIndex = readInt32FromBuff(8, (const byte*)compText);
 	const int lastBitIndex = compText[12];
 
 	printf("Num nodes %i\n", numNodes);
@@ -177,10 +177,10 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 	free(rawTable);
 
 	printf("Isolating compressed text\n");
-	const char *inText = compText + compBuffIndex;
+	const byte *inText = compText + compBuffIndex;
 
 	printf("Creating output buffer\n");
-	char *out = calloc(dataLen, 1);
+	byte *out = calloc(dataLen, 1);
 
 	printf("Decompressing...\n");
 	int outLen = decompress(inText, out, dataLen, table, lastByteIndex, lastBitIndex);
@@ -201,7 +201,7 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 		printf("Couldn't open output file\n");
 		return 1;
 	}
-	fwrite(out, sizeof(char), outLen, f);
+	fwrite(out, sizeof(byte), outLen, f);
 	fclose(f);
 
 	printf("Destroying output buffer\n");

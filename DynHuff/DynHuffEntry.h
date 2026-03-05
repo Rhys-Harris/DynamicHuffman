@@ -3,12 +3,14 @@
 
 #include <stdbool.h>
 
+#include "../def.h"
+
 typedef struct DynHuffEntry {
-		unsigned char symbolLen;
-		char symbol[255];
+		byte symbolLen;
+		byte symbol[255];
 		int count;
 } DynHuffEntry;
 
-DynHuffEntry *searchForMatchingHuffEntry(DynHuffEntry *entries, const int numEntries, const char symbol);
+DynHuffEntry *searchForMatchingHuffEntry(DynHuffEntry *entries, const int numEntries, const byte symbol);
 
 #endif

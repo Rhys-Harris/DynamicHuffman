@@ -3,13 +3,15 @@
 
 #include <stdbool.h>
 
+#include "../def.h"
+
 #define MAX_CHARS_PER_WRITE_NODE 264
 
 typedef struct DynWriteNode {
 	int parent;
-	unsigned char symbolLen;
+	byte symbolLen;
 	bool isRight;
-	char symbol[255];
+	byte symbol[255];
 } DynWriteNode;
 
 #endif
