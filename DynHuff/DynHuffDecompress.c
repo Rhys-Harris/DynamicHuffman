@@ -10,7 +10,8 @@
 
 #define MAX_CHARS 100000
 
-void readInNodeTable(DynWriteNode *rawTable, const char *compText, const int numNodes) {
+// Returns the index of the first char after the table
+int readInNodeTable(DynWriteNode *rawTable, const char *compText, const int numNodes) {
 	printf("Reading in table\n");
 
 	// Skip metadata
@@ -36,6 +37,8 @@ void readInNodeTable(DynWriteNode *rawTable, const char *compText, const int num
 			node->symbol[j] = compText[buffIndex];
 		}
 	}
+
+	return buffIndex;
 }
 
 DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) {
@@ -105,7 +108,7 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 		return 1;
 	}
 
-	readInNodeTable(rawTable, compText, numNodes);
+	const int compBuffIndex = readInNodeTable(rawTable, compText, numNodes);
 
 	DynReadNode *table = convertToReadableTable(numNodes, rawTable);
 	if (table == NULL) {
@@ -113,13 +116,20 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 		return 1;
 	}
 
-	// Destroy write nodes
 	printf("Destroying raw table\n");
 	free(rawTable);
 
-	// Destroy table
+	printf("Isolating compressed text\n");
+	const char *inText = compText + compBuffIndex;
+
+	printf("Creating output buffer\n");
+	char *out = calloc(dataLen, 1);
+
 	printf("Destroying table\n");
 	free(table);
+
+	printf("Destroying output buffer\n");
+	free(out);
 
 	return 0;
 }
