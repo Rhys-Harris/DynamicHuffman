@@ -59,8 +59,25 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 	return entries;
 }
 
+bool strMatchFoundAtPoint(const char *strA, const char *strB, const int len) {
+	for (int i = 0; i < len; ++i) {
+		if (strA[i] != strB[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool charInString(const char c, const char *str, const int len) {
+	for (int i = 0; i < len; ++i) {
+		if (c == str[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text, const int dataLen) {
-	// TODO: Have this work for more than just a pair
 	printf("Finding consistent patterns\n");
 
 	for (int i = 0; i < uniques; ++i) {
@@ -72,18 +89,18 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 
 		// Check, is this symbol always followed by the same character?
 		for (int j = 0; j < dataLen; ++j) {
-			if (text[j] != entry->symbol[0]) {
+			if (!strMatchFoundAtPoint(text+j, entry->symbol, entry->symbolLen)) {
 				continue;
 			}
 
 			if (!doneFirstMatch) {
-				matcher = text[j+1];
+				matcher = text[j+entry->symbolLen];
 				patternFound = true;
 				doneFirstMatch = true;
 				continue;
 			}
 
-			if (matcher != text[j+1]) {
+			if (matcher != text[j+entry->symbolLen]) {
 				patternFound = false;
 				break;
 			}
@@ -95,7 +112,7 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 		}
 
 		// Did we just try to match ourselves??
-		if (matcher == entry->symbol[0]) {
+		if (charInString(matcher, entry->symbol, entry->symbolLen)) {
 			continue;
 		}
 
@@ -426,9 +443,36 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 		return 1;
 	}
 
+	// printf("\nTABLE\n");
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
+
 	numSymbols = mergeConsistentPatterns(entries, numSymbols, text, dataLen);
 
+	// printf("\nTABLE\n");
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
+
 	sortEntries(entries, numSymbols);
+
+	// printf("\nTABLE\n");
+	// for (int i = 0; i < numSymbols; ++i) {
+	// 	if (entries[i].symbolLen == 1) {
+	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+	// 	} else {
+	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+	// 	}
+	// }
 
 	DynNode *nodes = malloc(numSymbols*sizeof(DynNode));
 	if (nodes == NULL) {

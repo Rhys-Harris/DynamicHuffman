@@ -20,6 +20,11 @@ Second, it increases the size of the table.
 The table now needs to store potentially multiple characters for each entry.
 The amount of characters stored also needs to be stored.
 
+Third, the current method can't handle the same char recurring.
+Imagine a file that has "122" repeating 100 times.
+Dynamic Huffman's table will treat "1", and both "2"s seperately.
+However, the most efficient method would be to batch "122" into a single entry.
+
 ## Metadata
 The original Huffman metadata I stored was like this.
 This is from my [previous project](https://github.com/Rhys-Harris/Huffman).
