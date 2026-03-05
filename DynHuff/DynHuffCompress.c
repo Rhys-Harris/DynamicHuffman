@@ -116,10 +116,7 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 			continue;
 		}
 
-		char matchFull[255];
-		matchFull[0] = matcher;
-
-		DynHuffEntry *other = searchForMatchingHuffEntry(entries, uniques, matchFull, 1);
+		DynHuffEntry *other = searchForMatchingHuffEntry(entries, uniques, matcher);
 		if (other == NULL) {
 			// Shouldn't happen, but safer
 			printf("ERR: Couldn't find entry\n");
@@ -133,15 +130,14 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 		}
 
 		// Merge results!
-		entry->symbol[1] = other->symbol[0];
-		entry->symbolLen++;
+		for (int i = 0; i < other->symbolLen; ++i) {
+			entry->symbol[entry->symbolLen] = other->symbol[i];
+			entry->symbolLen++;
+		}
 
 		// Delete other
 		int otherIndex = (int)(
-            (
-				(long long)other -
-				(long long)entries
-			) /
+			((long long)other - (long long)entries) /
 			sizeof(DynHuffEntry)
 		);
 		--uniques;
@@ -152,11 +148,14 @@ int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text
 			memcpy(entries[j].symbol, entries[j+1].symbol, entries[j].symbolLen);
 		}
 
-		// Were we moved back?
-		if (otherIndex < i) {
-			// Move back with it
-			--i;
-		}
+		// Try to match again
+		--i;
+
+		// // Were we moved back?
+		// if (otherIndex < i) {
+		// 	// Move back with it
+		// 	--i;
+		// }
 
 		// printf("Successful merge!\n");
 	}
