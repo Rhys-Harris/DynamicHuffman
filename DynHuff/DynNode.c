@@ -4,6 +4,20 @@
 
 #include "DynNode.h"
 
+int nodeHeight(const DynNode *node) {
+	int height = 0;
+
+	if (node->left != NULL) {
+		height = nodeHeight(node->left);
+	}
+
+	if (node->right != NULL) {
+		height = __max(height, nodeHeight(node->right));
+	}
+
+	return height+1;
+}
+
 bool nodeFitsDesc(DynNode *node, const byte symbol[255], const int symbolLen) {
 	if (node->symbolLen != symbolLen) {
 		return false;
@@ -59,7 +73,7 @@ void fixParents(DynNode *node) {
 }
 
 #if DEV_MULTI_CHAR
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen) {
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen, const int MAX_NODE_DEPTH) {
 	if (*pathLen == MAX_NODE_DEPTH) {
 		printf("Ran out of path space\n");
 		return false;
@@ -71,7 +85,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 
 	// Check left
 	if (node->left != NULL) {
-		bool found = findPathForSymbol(nodePath, node->left, pathLen, symbol, symbolLen);
+		bool found = findPathForSymbol(nodePath, node->left, pathLen, symbol, symbolLen, MAX_NODE_DEPTH);
 		if (found) {
 			return true;
 		}
@@ -79,7 +93,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 
 	// Check right
 	if (node->right != NULL) {
-		bool found = findPathForSymbol(nodePath, node->right, pathLen, symbol, symbolLen);
+		bool found = findPathForSymbol(nodePath, node->right, pathLen, symbol, symbolLen, MAX_NODE_DEPTH);
 		if (found) {
 			return true;
 		}
@@ -97,7 +111,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 	return false;
 }
 #else
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol) {
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol, const int MAX_NODE_DEPTH) {
 	if (*pathLen == MAX_NODE_DEPTH) {
 		printf("Ran out of path space\n");
 		return false;
@@ -109,7 +123,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 
 	// Check left
 	if (node->left != NULL) {
-		bool found = findPathForSymbol(nodePath, node->left, pathLen, symbol);
+		bool found = findPathForSymbol(nodePath, node->left, pathLen, symbol, MAX_NODE_DEPTH);
 		if (found) {
 			return true;
 		}
@@ -117,7 +131,7 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 
 	// Check right
 	if (node->right != NULL) {
-		bool found = findPathForSymbol(nodePath, node->right, pathLen, symbol);
+		bool found = findPathForSymbol(nodePath, node->right, pathLen, symbol, MAX_NODE_DEPTH);
 		if (found) {
 			return true;
 		}

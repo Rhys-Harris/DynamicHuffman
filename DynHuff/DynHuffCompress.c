@@ -12,7 +12,7 @@
 
 #include "DynHuffCompress.h"
 
-#define OUT_TEXT_MAX_SIZE 1000000
+#define EXTRA_SIZE_BUFFER 5000
 
 // Returns the complete table, giving count for each char
 DynHuffEntry *getUniqueSymbols(const byte *text, const int dataLen, int *numSymbols) {
@@ -247,8 +247,13 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 }
 
 CompStream createCompressedText(const byte *text, const int dataLen, DynNode *root) {
+	const int MAX_NODE_DEPTH = nodeHeight(root);
+
+	// Output scales with input size
+	const int MAX_OUT_SIZE = EXTRA_SIZE_BUFFER + dataLen;
+
 	CompStream out = EMPTY_COMP_STREAM;
-	out.text = calloc(OUT_TEXT_MAX_SIZE, sizeof(byte));
+	out.text = calloc(MAX_OUT_SIZE, sizeof(byte));
 	if (out.text == NULL) {
 		printf("Couldn't allocate memory\n");
 		return out;
@@ -260,7 +265,7 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode *ro
 	int addition = 1;
 
 	for (int i = 0; i < dataLen; i += addition) {
-		bool found = findPathForSymbol(nodePath, root, &pathLen, text[i]);
+		bool found = findPathForSymbol(nodePath, root, &pathLen, text[i], MAX_NODE_DEPTH);
 
 		if (!found) {
 			printf("Couldn't find symbol '%c' ('%i')\n", text[i], text[i]);
@@ -284,7 +289,7 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode *ro
 				out.nextBitIndex = 0;
 				out.nextByteIndex++;
 
-				if (out.nextByteIndex == OUT_TEXT_MAX_SIZE) {
+				if (out.nextByteIndex == MAX_OUT_SIZE) {
 					printf("Ran out of output space\n");
 					return EMPTY_COMP_STREAM;
 				}

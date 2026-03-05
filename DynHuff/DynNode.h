@@ -11,9 +11,6 @@
 // Maximum number of nodes that can be in the huffman tree
 #define MAX_NODES 1000
 
-// Maximum height of the huffman tree
-#define MAX_NODE_DEPTH 100
-
 typedef struct DynNode DynNode;
 
 typedef struct DynNode {
@@ -28,6 +25,8 @@ typedef struct DynNode {
 	byte symbol[255];
 } DynNode;
 
+int nodeHeight(const DynNode *node);
+
 // Recursively frees this node's children, then itself
 void destroyNode(DynNode *node);
 
@@ -38,9 +37,9 @@ int countNodes(const DynNode *node);
 void fixParents(DynNode *node);
 
 #if DEV_MULTI_CHAR
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen);
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen, const int MAX_NODE_DEPTH);
 #else
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol);
+bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol, const int MAX_NODE_DEPTH);
 #endif
 
 void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int numNodes, int *curNodeIndex, int parent);
