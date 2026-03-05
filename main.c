@@ -21,7 +21,7 @@ errno_t testHuffMethod(const char infilename[]) {
 	
 	printf("FINISHED DECOMPRESSION\n");
 
-	printf("== END TESTING DYNAMIC HUFF s ==\n\n");
+	printf("== END TESTING DYNAMIC HUFF ==\n\n");
 
 	return 0;
 }
