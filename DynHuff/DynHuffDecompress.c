@@ -55,6 +55,7 @@ DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) 
 		DynWriteNode *wn = rawTable+i;
 
 		memcpy(table[i].symbol, wn->symbol, wn->symbolLen);
+		table[i].symbolLen = wn->symbolLen;
 		if (wn->parent == -1) {
 			continue;
 		}
@@ -148,11 +149,29 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 
 	const int compBuffIndex = readInNodeTable(rawTable, compText, numNodes);
 
+	// for (int i = 0; i < numNodes; ++i) {
+	// 	DynWriteNode *n = rawTable+i;
+	// 	if (n->symbolLen == 1) {
+	// 		printf("NODE: '%c' L%i P%i R%i\n", n->symbol[0], n->symbolLen, n->parent, n->isRight);
+	// 	} else {
+	// 		printf("NODE: '%c%c' L%i P%i R%i\n", n->symbol[0], n->symbol[0], n->symbolLen, n->parent, n->isRight);
+	// 	}
+	// }
+
 	DynReadNode *table = convertToReadableTable(numNodes, rawTable);
 	if (table == NULL) {
 		printf("Couldn't convert table\n");
 		return 1;
 	}
+
+	// for (int i = 0; i < numNodes; ++i) {
+	// 	DynReadNode *n = table+i;
+	// 	if (n->symbolLen == 1) {
+	// 		printf("NODE: '%c' L%i <%i >%i\n", n->symbol[0], n->symbolLen, n->left, n->right);
+	// 	} else {
+	// 		printf("NODE: '%c%c' L%i <%i >%i\n", n->symbol[0], n->symbol[0], n->symbolLen, n->left, n->right);
+	// 	}
+	// }
 
 	printf("Destroying raw table\n");
 	free(rawTable);
@@ -174,6 +193,16 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 
 	printf("Destroying table\n");
 	free(table);
+
+	// Write output to file
+	FILE *f;
+	errno_t err = fopen_s(&f, outfilename, "w");
+	if (err) {
+		printf("Couldn't open output file\n");
+		return 1;
+	}
+	fwrite(out, sizeof(char), outLen, f);
+	fclose(f);
 
 	printf("Destroying output buffer\n");
 	free(out);
