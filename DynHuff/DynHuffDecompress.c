@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../BufView.h"
+#include "DynWriteNode.h"
 
 #include "DynHuffDecompress.h"
 
@@ -37,7 +39,18 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 	printf("Original data length %i\n", dataLen);
 	printf("Last byte index %i\n", lastByteIndex);
 	printf("Last bit index %i\n", lastBitIndex);
-	printf("\n");
+
+	// Convert raw data to read nodes table
+	printf("Allocating table\n");
+	DynWriteNode *rawTable = calloc(numNodes, sizeof(DynWriteNode));
+	if (rawTable == NULL) {
+		printf("Couldn't allocate memory\n");
+		return 1;
+	}
+
+	// Destroy write nodes
+	printf("Destroying raw table\n");
+	free(rawTable);
 
 	return 0;
 }
