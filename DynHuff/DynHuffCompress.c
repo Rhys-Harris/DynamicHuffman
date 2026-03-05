@@ -298,6 +298,10 @@ DynWriteNode *createWriteTable(DynNode *root, const int numNodes) {
 	return nodeList;
 }
 
+errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, char **outOut, int *outLen) {
+	return 0;
+}
+
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -378,6 +382,18 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 
 	// Compress tree to a writable table
 	DynWriteNode *nodeList = createWriteTable(&root, numNodes);
+
+	// Destroy the huffman tree
+	printf("Destroying huffman tree\n");
+	destroyNode(&root);
+
+	char *out;
+	int outLen;
+	err = writeAllDataToBuffer(nodeList, numNodes, stream, &out, &outLen);
+	if (err) {
+		printf("Couldn't write data to buffer\n");
+		return 1;
+	}
 
 	// Destroy comp text buffer
 	printf("Destroying comp text buffer\n");
