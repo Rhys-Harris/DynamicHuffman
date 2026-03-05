@@ -9,6 +9,34 @@
 
 #define MAX_CHARS 100000
 
+void readInNodeTable(DynWriteNode *rawTable, const char *compText, const int numNodes) {
+	printf("Reading in table\n");
+
+	// Skip metadata
+	int buffIndex = 13;
+
+	for (int i = 0; i < numNodes; ++i) {
+		DynWriteNode *node = rawTable+i;
+		
+		// 0 -> 3
+		node->parent = readInt32FromBuff(buffIndex, (const unsigned char*)compText);
+		buffIndex += 4;
+
+		// 4
+		node->symbolLen = compText[buffIndex];
+		++buffIndex;
+
+		// 5
+		node->isRight = compText[buffIndex];
+		++buffIndex;
+
+		// 6 ->
+		for (int j = 0; j < node->symbolLen; ++j, ++buffIndex) {
+			node->symbol[j] = compText[buffIndex];
+		}
+	}
+}
+
 errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -47,6 +75,8 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 		printf("Couldn't allocate memory\n");
 		return 1;
 	}
+
+	readInNodeTable(rawTable, compText, numNodes);
 
 	// Destroy write nodes
 	printf("Destroying raw table\n");
