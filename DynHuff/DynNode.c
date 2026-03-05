@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "DynNode.h"
 
@@ -93,4 +94,38 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const cha
 	
 	// Return a fail
 	return false;
+}
+
+void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int maxNodes, int *curNodeIndex, int parent) {
+	if (*curNodeIndex == maxNodes) {
+		printf("Ran out of space to add nodes\n");
+		return;
+	}
+
+	// Place this node in the list
+	nodeList[*curNodeIndex] = (DynWriteNode){
+		parent,
+		node->symbolLen,
+		node->isRight,
+		// Symbol added below
+	};
+	memcpy(nodeList[*curNodeIndex].symbol, node->symbol, node->symbolLen);
+
+	const int thisIndex = *curNodeIndex;
+
+	if (node->left != NULL) {
+		// Go to the next node in list
+		(*curNodeIndex)++;
+
+		// Place left side in
+		placeNodeInList(node->left, nodeList, maxNodes, curNodeIndex, thisIndex);
+	}
+
+	if (node->right != NULL) {
+		// Go to the next node in list
+		(*curNodeIndex)++;
+
+		// Place right side in
+		placeNodeInList(node->right, nodeList, maxNodes, curNodeIndex, thisIndex);
+	}
 }
