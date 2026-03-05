@@ -9,6 +9,7 @@
 #include "DynWriteNode.h"
 #include "../BufView.h"
 #include "../FRead.h"
+#include "../FWrite.h"
 
 #include "DynHuffCompress.h"
 
@@ -247,6 +248,8 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 }
 
 CompStream createCompressedText(const byte *text, const int dataLen, DynNode *root) {
+	printf("Creating comp stream\n");
+
 	const int MAX_NODE_DEPTH = nodeHeight(root);
 
 	// Output scales with input size
@@ -500,13 +503,11 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	fixParents(&root);
 
 	// Use the tree to compress the data
-	printf("Creating comp stream\n");
 	CompStream stream = createCompressedText(text, dataLen, &root);
 	if (stream.text == NULL) {
 		printf("Couldn't compress text\n");
 		return 1;
 	}
-
 	printf("Compressed Text Length: %i\n", stream.length);
 
 	// Compress tree to a writable table
@@ -533,16 +534,10 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	free(nodeList);
 
 	printf("Writing...\n");
-
-	FILE *f;
-	err = fopen_s(&f, outfilename, "wb");
-	if (err) {
-		printf("Couldn't open output file\n");
+	if (FWriteWhole(outfilename, out, outLen)) {
+		printf("Couldn't write to file\n");
 		return 1;
 	}
-	fwrite(out, sizeof(byte), outLen, f);
-	fclose(f);
-
 	printf("Done write\n\n");
 
 	// Destroy final buffer

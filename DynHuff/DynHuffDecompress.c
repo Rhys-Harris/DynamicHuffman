@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../FRead.h"
+#include "../FWrite.h"
 #include "../BufView.h"
 #include "DynWriteNode.h"
 #include "DynReadNode.h"
@@ -188,15 +189,12 @@ errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 	printf("Destroying table\n");
 	free(table);
 
-	// Write output to file
-	FILE *f;
-	errno_t err = fopen_s(&f, outfilename, "w");
-	if (err) {
-		printf("Couldn't open output file\n");
+	printf("Writing...\n");
+	if (FWriteWhole(outfilename, out, outLen)) {
+		printf("Couldn't write to file\n");
 		return 1;
 	}
-	fwrite(out, sizeof(byte), outLen, f);
-	fclose(f);
+	printf("Done write\n\n");
 
 	printf("Destroying output buffer\n");
 	free(out);

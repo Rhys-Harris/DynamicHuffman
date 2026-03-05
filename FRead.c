@@ -28,3 +28,4 @@ errno_t FReadWhole(const char filename[], byte **out, long *len) {
 
 	return 0;
 }
+
