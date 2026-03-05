@@ -9,6 +9,7 @@
 #include "DynHuffCompress.h"
 
 #define MAX_CHARS 100000
+#define OUT_TEXT_MAX_SIZE 100000
 
 // Returns the complete table, giving count for each char
 DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymbols) {
@@ -230,8 +231,33 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
-CompStream createCompressedText(const char *text, DynNode *root) {
-	return EMPTY_COMP_STREAM;
+CompStream createCompressedText(const char *text, const int dataLen, DynNode *root) {
+	CompStream out = EMPTY_COMP_STREAM;
+	out.text = calloc(OUT_TEXT_MAX_SIZE, sizeof(char));
+	if (out.text == NULL) {
+		printf("Couldn't allocate memory\n");
+		return out;
+	}
+
+	DynNode nodePath[MAX_NODE_DEPTH];
+	int pathLen = 0;
+
+	for (int i = 0; i < dataLen; ++i) {
+		bool found = findPathForSymbol(nodePath, root, &pathLen, text[i]);
+
+		if (!found) {
+			printf("Couldn't find symbol '%c' ('%i')\n", text[i], text[i]);
+			// free(out.text);
+			// return EMPTY_COMP_STREAM;
+		}
+
+		pathLen = 0;
+	}
+
+	// Calculate the length of the output string
+	out.length = out.nextByteIndex + 1 - (out.nextBitIndex==0);
+
+	return out;
 }
 
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
@@ -304,7 +330,7 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 
 	// Use the tree to compress the data
 	printf("Creating comp stream\n");
-	CompStream stream = createCompressedText(text, &root);
+	CompStream stream = createCompressedText(text, dataLen, &root);
 	if (stream.text == NULL) {
 		printf("Couldn't compress text\n");
 		return 1;
