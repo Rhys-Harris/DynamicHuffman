@@ -9,4 +9,6 @@ typedef struct DynHuffEntry {
 		int count;
 } DynHuffEntry;
 
+DynHuffEntry *searchForMatchingHuffEntry(DynHuffEntry *entries, const int numEntries, const char symbol[255], const int symbolLen);
+
 #endif
