@@ -259,7 +259,8 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode *ro
 		return out;
 	}
 
-	DynNode nodePath[MAX_NODE_DEPTH];
+	DynNode *nodePath = malloc(MAX_NODE_DEPTH*sizeof(DynNode));
+
 	int pathLen = 0;
 
 	int addition = 1;
@@ -301,6 +302,8 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode *ro
 
 		pathLen = 0;
 	}
+
+	free(nodePath);
 
 	// Calculate the length of the output string
 	out.length = out.nextByteIndex + 1 - (out.nextBitIndex==0);
