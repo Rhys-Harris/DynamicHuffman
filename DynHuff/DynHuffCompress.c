@@ -4,6 +4,7 @@
 
 #include "DynHuffEntry.h"
 #include "DynNode.h"
+#include "CompStream.h"
 
 #include "DynHuffCompress.h"
 
@@ -229,6 +230,10 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
+CompStream createCompressedText(const char *text, DynNode *root) {
+	return EMPTY_COMP_STREAM;
+}
+
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -292,6 +297,19 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 	// Get the number of nodes
 	numNodes = countNodes(&root);
 	printf("Tree made of %i nodes\n", numNodes);
+
+	// Fix parents
+	printf("Fixing parents\n");
+	fixParents(&root);
+
+	// Use the tree to compress the data
+	printf("Creating comp stream\n");
+	CompStream stream = createCompressedText(text, &root);
+	if (stream.text == NULL) {
+		printf("Couldn't compress text\n");
+		return 1;
+	}
+
 
 	return 1;
 }
