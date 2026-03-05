@@ -442,36 +442,36 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 		return 1;
 	}
 
-	// printf("\nTABLE\n");
-	// for (int i = 0; i < numSymbols; ++i) {
-	// 	if (entries[i].symbolLen == 1) {
-	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-	// 	} else {
-	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-	// 	}
-	// }
+	printf("\nTABLE\n");
+	for (int i = 0; i < numSymbols; ++i) {
+		if (entries[i].symbolLen == 1) {
+			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+		} else {
+			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+		}
+	}
 
 	numSymbols = mergeConsistentPatterns(entries, numSymbols, text, dataLen);
 
-	// printf("\nTABLE\n");
-	// for (int i = 0; i < numSymbols; ++i) {
-	// 	if (entries[i].symbolLen == 1) {
-	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-	// 	} else {
-	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-	// 	}
-	// }
+	printf("\nTABLE\n");
+	for (int i = 0; i < numSymbols; ++i) {
+		if (entries[i].symbolLen == 1) {
+			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+		} else {
+			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+		}
+	}
 
 	sortEntries(entries, numSymbols);
 
-	// printf("\nTABLE\n");
-	// for (int i = 0; i < numSymbols; ++i) {
-	// 	if (entries[i].symbolLen == 1) {
-	// 		printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
-	// 	} else {
-	// 		printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
-	// 	}
-	// }
+	printf("\nTABLE\n");
+	for (int i = 0; i < numSymbols; ++i) {
+		if (entries[i].symbolLen == 1) {
+			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+		} else {
+			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+		}
+	}
 
 	DynNode *nodes = malloc(numSymbols*sizeof(DynNode));
 	if (nodes == NULL) {
