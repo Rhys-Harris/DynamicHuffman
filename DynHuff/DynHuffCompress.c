@@ -288,6 +288,16 @@ CompStream createCompressedText(const char *text, const int dataLen, DynNode *ro
 	return out;
 }
 
+
+DynWriteNode *createWriteTable(DynNode *root, const int numNodes) {
+	DynWriteNode *nodeList = malloc(numNodes*sizeof(DynWriteNode));
+	int curNodeIndex = 0;
+
+	placeNodeInList(root, nodeList, numNodes, &curNodeIndex, -1);
+
+	return nodeList;
+}
+
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -364,9 +374,18 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 		return 1;
 	}
 
+	printf("Compressed Text Length: %i\n", stream.length);
+
+	// Compress tree to a writable table
+	DynWriteNode *nodeList = createWriteTable(&root, numNodes);
+
 	// Destroy comp text buffer
 	printf("Destroying comp text buffer\n");
 	free(stream.text);
+
+	// Destroy node list
+	printf("Destroying write node list\n");
+	free(nodeList);
 
 	return 1;
 }
