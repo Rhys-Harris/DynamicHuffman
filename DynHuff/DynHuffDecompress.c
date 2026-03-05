@@ -118,6 +118,10 @@ errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
 	byte *text;
 	long dataLen;
 	errno_t err = FReadWhole(infilename, &text, &dataLen);
+	if (err) {
+		printf("Couldn't read input file\n");
+		return err;
+	}
 	err = dynHuffDecompress(text, outfilename);
 	free(text);
 	return err;

@@ -256,7 +256,8 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode **l
 	printf("Creating comp stream\n");
 
 	// Output scales with input size
-	const int MAX_OUT_SIZE = EXTRA_SIZE_BUFFER + dataLen;
+	const int MAX_OUT_SIZE = EXTRA_SIZE_BUFFER + dataLen*2;
+	printf("Max output size: %i\n", MAX_OUT_SIZE);
 
 	CompStream out = EMPTY_COMP_STREAM;
 	out.text = calloc(MAX_OUT_SIZE, sizeof(byte));
@@ -272,6 +273,7 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode **l
 
 	for (int i = 0; i < dataLen; i += addition) {
 		const int leafNodeIndex = leafNodeLookup[text[i]];
+
 		DynNode *curNode = leafNodes[leafNodeIndex];
 
 		if (curNode == NULL) {
@@ -434,6 +436,10 @@ errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 	byte *text;
 	long dataLen;
 	errno_t err = FReadWhole(infilename, &text, &dataLen);
+	if (err) {
+		printf("Couldn't read input file\n");
+		return err;
+	}
 	err = dynHuffCompress(text, outfilename, dataLen);
 	free(text);
 	return err;

@@ -35,8 +35,7 @@ errno_t testHuffMethod(const char infilename[]) {
 }
 
 int main(const int argc, char *argv[]) {
-	// const char infilename[] = "./inputs/comp.txt";
-	const char infilename[] = "./dev.exe";
+	const char infilename[] = "./inputs/cheem.webp";
 
 	if (testHuffMethod(infilename)) {
 		printf("Fail on testing dynamic huff\n");

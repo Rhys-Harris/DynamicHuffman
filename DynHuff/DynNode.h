@@ -6,8 +6,6 @@
 #include "../def.h"
 #include "./DynWriteNode.h"
 
-#define DEV_MULTI_CHAR 0
-
 // Maximum number of nodes that can be in the huffman tree
 #define MAX_NODES 1000
 
@@ -37,12 +35,6 @@ int countNodes(const DynNode *node);
 
 // Recursively tells all children that this node is its parent
 void fixParents(DynNode *node);
-
-#if DEV_MULTI_CHAR
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol[255], const int symbolLen, const int MAX_NODE_DEPTH);
-#else
-bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byte symbol, const int MAX_NODE_DEPTH);
-#endif
 
 void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int numNodes, int *curNodeIndex, int parent);
 
