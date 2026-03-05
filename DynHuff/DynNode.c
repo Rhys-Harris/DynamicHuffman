@@ -13,3 +13,17 @@ void destroyNode(DynNode *node) {
 		free(node->right);
 	}
 }
+
+int countNodes(const DynNode *node) {
+	int count = 1;
+
+	if (node->left != NULL) {
+		count += countNodes(node->left);
+	}
+
+	if (node->right != NULL) {
+		count += countNodes(node->right);
+	}
+
+	return count;
+}
