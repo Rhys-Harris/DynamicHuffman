@@ -25,6 +25,7 @@ typedef struct DynNode {
 	bool isRight;
 } DynNode;
 
+// Recursively frees this node's children, then itself
 void destroyNode(DynNode *node);
 
 int countNodes(const DynNode *node);
