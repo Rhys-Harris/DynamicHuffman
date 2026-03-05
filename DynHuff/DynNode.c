@@ -150,16 +150,16 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 }
 #endif
 
-DynNode *findNodeStaringWithSymbol(DynNode **leafNodes, const int numLeafNodes, const byte symbol) {
+int findNodeStaringWithSymbol(DynNode **leafNodes, const int numLeafNodes, const byte symbol) {
 	for (int i = 0; i < numLeafNodes; ++i) {
 		DynNode *leafNode = leafNodes[i];
 
 		if (leafNode->symbol[0] == symbol) {
-			return leafNode;
+			return i;
 		}
 	}
 
-	return NULL;
+	return -1;
 }
 
 void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int maxNodes, int *curNodeIndex, int parent) {

@@ -252,7 +252,7 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
-CompStream createCompressedText(const byte *text, const int dataLen, DynNode **leafNodes, const int numLeafNodes, const int MAX_NODE_DEPTH) {
+CompStream createCompressedText(const byte *text, const int dataLen, DynNode **leafNodes, int leafNodeLookup[255], const int MAX_NODE_DEPTH) {
 	printf("Creating comp stream\n");
 
 	// Output scales with input size
@@ -271,7 +271,8 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode **l
 	int addition = 1;
 
 	for (int i = 0; i < dataLen; i += addition) {
-		DynNode *curNode = findNodeStaringWithSymbol(leafNodes, numLeafNodes, text[i]);
+		const int leafNodeIndex = leafNodeLookup[text[i]];
+		DynNode *curNode = leafNodes[leafNodeIndex];
 
 		if (curNode == NULL) {
 			printf("Couldn't find symbol '%c' ('%i')\n", text[i], text[i]);
@@ -288,13 +289,7 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode **l
 		}
 
 		for (int j = pathLen-1; j >= 0; --j) {
-			DynNode *node = nodePath[j];
-
-			byte byte = 0;
-
-			if (node->isRight) {
-				byte = 1;
-			}
+			byte byte = nodePath[j]->isRight;
 
 			byte <<= (7-out.nextBitIndex);
 			out.text[out.nextByteIndex] |= byte;
@@ -541,6 +536,12 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("Finding leaf nodes\n");
 	DynNode **leafNodes = findAllLeafNodes(&root, numLeafNodes);
 
+	// Pre-calc all needed indicies
+	int leafNodeLookup[255];
+	for (int i = 0; i < 255; ++i) {
+		leafNodeLookup[i] = findNodeStaringWithSymbol(leafNodes, numLeafNodes, (byte)i);
+	}
+
 	const int MAX_NODE_DEPTH = nodeHeight(&root);
 
 	#ifdef TIME_COMP
@@ -548,7 +549,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	#endif
 
 	// Use the tree to compress the data
-	CompStream stream = createCompressedText(text, dataLen, leafNodes, numLeafNodes, MAX_NODE_DEPTH);
+	CompStream stream = createCompressedText(text, dataLen, leafNodes, leafNodeLookup, MAX_NODE_DEPTH);
 	if (stream.text == NULL) {
 		printf("Couldn't compress text\n");
 		return 1;
