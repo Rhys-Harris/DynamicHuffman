@@ -501,6 +501,19 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 	printf("Destroying write node list\n");
 	free(nodeList);
 
+	printf("Writing...\n");
+
+	FILE *f;
+	err = fopen_s(&f, outfilename, "wb");
+	if (err) {
+		printf("Couldn't open output file\n");
+		return 1;
+	}
+	fwrite(out, sizeof(char), outLen, f);
+	fclose(f);
+
+	printf("Done write\n\n");
+
 	// Destroy final buffer
 	printf("Destroying output buffer\n");
 	free(out);
