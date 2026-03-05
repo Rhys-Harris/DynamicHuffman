@@ -340,6 +340,25 @@ int calcBytesNeededForWrite(DynWriteNode *nodeList, const int numNodes, CompStre
 errno_t writeAllDataToBuffer(DynWriteNode *nodeList, const int numNodes, CompStream stream, char **outOut, int *outLen) {
 	const int bytesNeeded = calcBytesNeededForWrite(nodeList, numNodes, stream);
 
+	int lastByteIndex = stream.nextByteIndex;
+	int lastBitIndex = stream.nextBitIndex-1;
+	if (lastBitIndex == -1) {
+		lastBitIndex = 7;
+		--lastByteIndex;
+	}
+
+	// Confirm just in case
+	if (lastByteIndex+1 != stream.length) {
+		printf("Last byte index + 1 wasn't stream length\n");
+		return 1;
+	}
+
+	printf("Allocating final string\n");
+	char *out = malloc(bytesNeeded);
+
+	*outOut = out;
+	*outLen = bytesNeeded;
+
 	return 0;
 }
 
@@ -443,6 +462,11 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 	// Destroy node list
 	printf("Destroying write node list\n");
 	free(nodeList);
+
+
+	// Destroy final buffer
+	printf("Destroying output buffer\n");
+	free(out);
 
 	return 1;
 }
