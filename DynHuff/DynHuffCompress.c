@@ -252,10 +252,8 @@ errno_t createHuffmanTree(DynNode *nodes, const DynHuffEntry *entries, const int
 	return 0;
 }
 
-CompStream createCompressedText(const byte *text, const int dataLen, DynNode *root) {
+CompStream createCompressedText(const byte *text, const int dataLen, DynNode **leafNodes, const int numLeafNodes, const int MAX_NODE_DEPTH) {
 	printf("Creating comp stream\n");
-
-	const int MAX_NODE_DEPTH = nodeHeight(root);
 
 	// Output scales with input size
 	const int MAX_OUT_SIZE = EXTRA_SIZE_BUFFER + dataLen;
@@ -267,26 +265,34 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode *ro
 		return out;
 	}
 
-	DynNode *nodePath = malloc(MAX_NODE_DEPTH*sizeof(DynNode));
+	DynNode **nodePath = malloc(MAX_NODE_DEPTH*sizeof(DynNode*));
 
 	int pathLen = 0;
-
 	int addition = 1;
 
 	for (int i = 0; i < dataLen; i += addition) {
-		bool found = findPathForSymbol(nodePath, root, &pathLen, text[i], MAX_NODE_DEPTH);
+		DynNode *curNode = findNodeStaringWithSymbol(leafNodes, numLeafNodes, text[i]);
 
-		if (!found) {
+		if (curNode == NULL) {
 			printf("Couldn't find symbol '%c' ('%i')\n", text[i], text[i]);
 			free(out.text);
+			free(nodePath);
 			return EMPTY_COMP_STREAM;
 		}
 
-		for (int j = 1; j < pathLen; ++j) {
-			byte byte = 0;
-			DynNode curNode = nodePath[j];
+		// Bake path into an array
+		while (curNode->parent != NULL) {
+			nodePath[pathLen] = curNode;
+			curNode = curNode->parent;
+			++pathLen;
+		}
 
-			if (curNode.isRight) {
+		for (int j = pathLen-1; j >= 0; --j) {
+			DynNode *node = nodePath[j];
+
+			byte byte = 0;
+
+			if (node->isRight) {
 				byte = 1;
 			}
 
@@ -306,7 +312,7 @@ CompStream createCompressedText(const byte *text, const int dataLen, DynNode *ro
 		}
 
 		// Skip multiple chars if we just used a merger
-		addition = nodePath[pathLen-1].symbolLen;
+		addition = nodePath[0]->symbolLen;
 
 		pathLen = 0;
 	}
@@ -532,23 +538,35 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	clock_t t6 = clock();
 	#endif
 
+	printf("Finding leaf nodes\n");
+	DynNode **leafNodes = findAllLeafNodes(&root, numLeafNodes);
+
+	const int MAX_NODE_DEPTH = nodeHeight(&root);
+
+	#ifdef TIME_COMP
+	clock_t t7 = clock();
+	#endif
+
 	// Use the tree to compress the data
-	CompStream stream = createCompressedText(text, dataLen, &root);
+	CompStream stream = createCompressedText(text, dataLen, leafNodes, numLeafNodes, MAX_NODE_DEPTH);
 	if (stream.text == NULL) {
 		printf("Couldn't compress text\n");
 		return 1;
 	}
 	printf("Compressed Text Length: %i\n", stream.length);
 
+	printf("Destroying leaf node refs\n");
+	free(leafNodes);
+
 	#ifdef TIME_COMP
-	clock_t t7 = clock();
+	clock_t t8 = clock();
 	#endif
 
 	// Compress tree to a writable table
 	DynWriteNode *nodeList = createWriteTable(&root, numNodes);
 
 	#ifdef TIME_COMP
-	clock_t t8 = clock();
+	clock_t t9 = clock();
 	#endif
 
 	// Destroy the huffman tree
@@ -564,7 +582,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	}
 
 	#ifdef TIME_COMP
-	clock_t t9 = clock();
+	clock_t t10 = clock();
 	#endif
 
 	// Destroy comp text buffer
@@ -592,9 +610,10 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("\tSORT ENTRIES  :\t%lis (%lims)\n", (t4-t3)/CLOCKS_PER_SEC, t4-t3);
 	printf("\tTREE CREATION :\t%lis (%lims)\n", (t5-t4)/CLOCKS_PER_SEC, t5-t4);
 	printf("\tCOUNT & FIX   :\t%lis (%lims)\n", (t6-t5)/CLOCKS_PER_SEC, t6-t5);
-	printf("\tCOMPRESS      :\t%lis (%lims)\n", (t7-t6)/CLOCKS_PER_SEC, t7-t6);
-	printf("\tWRITE TABLE   :\t%lis (%lims)\n", (t8-t7)/CLOCKS_PER_SEC, t8-t7);
-	printf("\tBUFFER WRITE  :\t%lis (%lims)\n", (t9-t8)/CLOCKS_PER_SEC, t9-t8);
+	printf("\tLEAF NODES    :\t%lis (%lims)\n", (t7-t6)/CLOCKS_PER_SEC, t7-t6);
+	printf("\tCOMPRESS      :\t%lis (%lims)\n", (t8-t7)/CLOCKS_PER_SEC, t8-t7);
+	printf("\tWRITE TABLE   :\t%lis (%lims)\n", (t9-t8)/CLOCKS_PER_SEC, t9-t8);
+	printf("\tBUFFER WRITE  :\t%lis (%lims)\n", (t10-t9)/CLOCKS_PER_SEC, t10-t9);
 
 	return 0;
 }

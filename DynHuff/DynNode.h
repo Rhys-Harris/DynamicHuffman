@@ -46,4 +46,6 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 
 void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int numNodes, int *curNodeIndex, int parent);
 
+DynNode *findNodeStaringWithSymbol(DynNode **leafNodes, const int numLeafNodes, const byte symbol);
+
 #endif

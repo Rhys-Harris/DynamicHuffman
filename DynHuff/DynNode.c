@@ -150,6 +150,18 @@ bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const byt
 }
 #endif
 
+DynNode *findNodeStaringWithSymbol(DynNode **leafNodes, const int numLeafNodes, const byte symbol) {
+	for (int i = 0; i < numLeafNodes; ++i) {
+		DynNode *leafNode = leafNodes[i];
+
+		if (leafNode->symbol[0] == symbol) {
+			return leafNode;
+		}
+	}
+
+	return NULL;
+}
+
 void placeNodeInList(DynNode *node, DynWriteNode *nodeList, const int maxNodes, int *curNodeIndex, int parent) {
 	if (*curNodeIndex == maxNodes) {
 		printf("Ran out of space to add nodes\n");
