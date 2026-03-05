@@ -242,14 +242,42 @@ CompStream createCompressedText(const char *text, const int dataLen, DynNode *ro
 	DynNode nodePath[MAX_NODE_DEPTH];
 	int pathLen = 0;
 
-	for (int i = 0; i < dataLen; ++i) {
+	int addition = 1;
+
+	for (int i = 0; i < dataLen; i += addition) {
 		bool found = findPathForSymbol(nodePath, root, &pathLen, text[i]);
 
 		if (!found) {
 			printf("Couldn't find symbol '%c' ('%i')\n", text[i], text[i]);
-			// free(out.text);
-			// return EMPTY_COMP_STREAM;
+			free(out.text);
+			return EMPTY_COMP_STREAM;
 		}
+
+		for (int j = 1; j < pathLen; ++j) {
+			unsigned char byte = 0;
+			DynNode curNode = nodePath[j];
+
+			if (curNode.isRight) {
+				byte = 1;
+			}
+
+			byte <<= (7-out.nextBitIndex);
+			out.text[out.nextByteIndex] |= byte;
+
+			++out.nextBitIndex;
+			if (out.nextBitIndex == 8) {
+				out.nextBitIndex = 0;
+				out.nextByteIndex++;
+
+				if (out.nextByteIndex == OUT_TEXT_MAX_SIZE) {
+					printf("Ran out of output space\n");
+					return EMPTY_COMP_STREAM;
+				}
+			}
+		}
+
+		// Skip multiple chars if we just used a merger
+		addition = nodePath[pathLen-1].symbolLen;
 
 		pathLen = 0;
 	}
@@ -336,6 +364,9 @@ errno_t dynHuffCompress(const char *text, const char *outfilename, const int dat
 		return 1;
 	}
 
+	// Destroy comp text buffer
+	printf("Destroying comp text buffer\n");
+	free(stream.text);
 
 	return 1;
 }
