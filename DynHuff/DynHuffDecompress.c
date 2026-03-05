@@ -69,6 +69,10 @@ DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) 
 	return table;
 }
 
+int decompress(const char *inText, char *out, int outLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
+	return 0;
+}
+
 errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
 	// Read in text
 	FILE *f;
@@ -124,6 +128,13 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 
 	printf("Creating output buffer\n");
 	char *out = calloc(dataLen, 1);
+
+	printf("Decompressing...\n");
+	int outLen = decompress(inText, out, dataLen, table, lastByteIndex, lastBitIndex);
+	if (outLen != dataLen) {
+		printf("Output size didn't match expected size\n");
+		return 1;
+	}
 
 	printf("Destroying table\n");
 	free(table);
