@@ -27,3 +27,17 @@ int countNodes(const DynNode *node) {
 
 	return count;
 }
+
+void fixParents(DynNode *node) {
+	if (node->left != NULL) {
+		fixParents(node->left);
+		node->left->parent = node;
+		node->left->isRight = false;
+	}
+
+	if (node->right != NULL) {
+		fixParents(node->right);
+		node->right->parent = node;
+		node->left->isRight = true;
+	}
+}

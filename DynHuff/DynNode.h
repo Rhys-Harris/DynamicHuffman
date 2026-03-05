@@ -28,8 +28,10 @@ typedef struct DynNode {
 // Recursively frees this node's children, then itself
 void destroyNode(DynNode *node);
 
+// Recursively counts all nodes below this node (inc. this node)
 int countNodes(const DynNode *node);
 
+// Recursively tells all children that this node is its parent
 void fixParents(DynNode *node);
 
 bool findPathForSymbol(DynNode *nodePath, DynNode *node, int *pathLen, const char symbol[255], const int symbolLen);
