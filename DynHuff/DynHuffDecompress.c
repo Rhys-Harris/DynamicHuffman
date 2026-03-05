@@ -70,7 +70,41 @@ DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) 
 }
 
 int decompress(const char *inText, char *out, int outLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
-	return 0;
+	int curByte = 0;
+	int curBit = 0;
+
+	DynReadNode *curNode = table+0;
+
+	int outLen = 0;
+
+	while (curByte < lastByteIndex || (curByte == lastByteIndex && curBit <= lastBitIndex)) {
+		const char bit = (char)(inText[curByte]>>(7-curBit))&1;
+
+		if (bit == 1) {
+			curNode = table+curNode->right;
+		} else {
+			curNode = table+curNode->left;
+		}
+
+		// Hit a leaf!
+		if (curNode->left == 0 && curNode->right == 0) {
+			for (int i = 0; i < curNode->symbolLen; ++i) {
+				out[outLen] = curNode->symbol[i];
+				++outLen;
+			}
+
+			// Back to root
+			curNode = table+0;
+		}
+
+		++curBit;
+		if (curBit == 8) {
+			curBit = 0;
+			++curByte;
+		}
+	}
+
+	return outLen;
 }
 
 errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
@@ -133,6 +167,8 @@ errno_t dynHuffDecompress(const char *compText, const char *outfilename) {
 	int outLen = decompress(inText, out, dataLen, table, lastByteIndex, lastBitIndex);
 	if (outLen != dataLen) {
 		printf("Output size didn't match expected size\n");
+		printf("\tExpected:\t%i\n", dataLen);
+		printf("\tGot:\t\t%i\n", outLen);
 		return 1;
 	}
 
