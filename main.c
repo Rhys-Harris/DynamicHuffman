@@ -27,7 +27,7 @@ errno_t testHuffMethod(const char infilename[]) {
 }
 
 int main(const int argc, char *argv[]) {
-	const char infilename[] = "inputs/out.ppm";
+	const char infilename[] = "inputs/in.txt";
 
 	if (testHuffMethod(infilename)) {
 		printf("Fail on testing dynamic huff\n");

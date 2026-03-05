@@ -51,9 +51,13 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 		++tableIndex;
 	}
 
+	return entries;
+}
+
+int mergeConsistentPatterns(DynHuffEntry *entries, int uniques, const char *text, const int dataLen) {
 	// TODO: Have this work for more than just a pair
-	// TODO: Possibly take to own function?
 	printf("Finding consistent patterns\n");
+
 	for (int i = 0; i < uniques; ++i) {
 		DynHuffEntry *entry = entries+i;
 
@@ -90,7 +94,10 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 			continue;
 		}
 
-		DynHuffEntry *other = searchForMatchingHuffEntry(entries, uniques, entry->symbol, entry->symbolLen);
+		char matchFull[255];
+		matchFull[0] = matcher;
+
+		DynHuffEntry *other = searchForMatchingHuffEntry(entries, uniques, matchFull, 1);
 		if (other == NULL) {
 			// Shouldn't happen, but safer
 			printf("ERR: Couldn't find entry\n");
@@ -108,11 +115,19 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 		entry->symbolLen++;
 
 		// Delete other
-		int otherIndex = entries-other;
+		int otherIndex = (int)(
+            (
+				(long long)other -
+				(long long)entries
+			) /
+			sizeof(DynHuffEntry)
+		);
 		--uniques;
 		for (int j = otherIndex; j < uniques; ++j) {
 			// Copy over each entry one back
-			entries[j] = entries[j+1];
+			entries[j].symbolLen = entries[j+1].symbolLen;
+			entries[j].count = entries[j+1].count;
+			memcpy(entries[j].symbol, entries[j+1].symbol, entries[j].symbolLen);
 		}
 
 		// Were we moved back?
@@ -120,9 +135,13 @@ DynHuffEntry *getUniqueSymbols(const char *text, const int dataLen, int *numSymb
 			// Move back with it
 			--i;
 		}
+
+		// printf("Successful merge!\n");
 	}
 
-	return entries;
+	// TODO: Possible free old entry table, and alloc to new smaller mem
+
+	return uniques;
 }
 
 errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
@@ -144,5 +163,25 @@ errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 }
 
 errno_t dynHuffCompress(const char *text, const char *outfilename, const int dataLen) {
+	int numSymbols;
+	DynHuffEntry *entries = getUniqueSymbols(text, dataLen, &numSymbols);
+	if (entries == NULL) {
+		printf("Couldn't get unique symbols\n");
+		return 1;
+	}
+
+	numSymbols = mergeConsistentPatterns(entries, numSymbols, text, dataLen);
+
+	for (int i = 0; i < numSymbols; ++i) {
+		if (entries[i].symbolLen == 1) {
+			printf("%c %i %i\n", entries[i].symbol[0], entries[i].count, entries[i].symbolLen);
+		} else {
+			printf("%c%c %i %i\n", entries[i].symbol[0], entries[i].symbol[1], entries[i].count, entries[i].symbolLen);
+		}
+	}
+
+	printf("Destroying symbol counts\n");
+	free(entries);
+
 	return 1;
 }
