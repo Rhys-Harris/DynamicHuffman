@@ -96,14 +96,19 @@ int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table,
 		}
 
 		// Hit a leaf!
-		if ((curNode->left & curNode->right) == 0) {
+		if ((curNode->left | curNode->right) == 0) {
 			if (outLen + curNode->symbolLen > maxLength) {
 				printf("ERR: Ran out of output space!\n");
 				return outLen;
 			}
 
-			for (int i = 0; i < curNode->symbolLen; ++i, ++outLen) {
+			for (int i = 0; i < curNode->symbolLen; ++i) {
+				// if (outLen == maxLength) {
+				// 	printf("ERR: Ran out of output space!\n");
+				// 	return outLen;
+				// }
 				out[outLen] = curNode->symbol[i];
+				++outLen;
 			}
 
 			// Back to root
