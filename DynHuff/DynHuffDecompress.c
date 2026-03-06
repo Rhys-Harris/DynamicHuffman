@@ -79,36 +79,35 @@ DynReadNode *convertToReadableTable(const int numNodes, DynWriteNode *rawTable) 
 int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table, const int lastByteIndex, const int lastBitIndex) {
 	int curByte = 0;
 	int curBit = 0;
-
-	DynReadNode *curNode = table+0;
-
 	int outLen = 0;
+
+	// Get first node (root)
+	DynReadNode *curNode = table;
 
 	while (curByte < lastByteIndex || (curByte == lastByteIndex && curBit <= lastBitIndex)) {
 		// OPTIMIZE: Shouldn't need to do 7-curBit
 		const byte bit = (byte)(inText[curByte]>>(7-curBit))&1;
 
 		// OPTIMIZE: Can use memory tricks to index straight in
-		if (bit == 1) {
+		if (bit) {
 			curNode = table+curNode->right;
 		} else {
 			curNode = table+curNode->left;
 		}
 
 		// Hit a leaf!
-		// OPTIMIZE: Can AND both pointers then check against 0
-		if (curNode->left == 0 && curNode->right == 0) {
-			for (int i = 0; i < curNode->symbolLen; ++i) {
-				if (outLen == maxLength) {
-					printf("ERR: Ran out of output space!\n");
-					return outLen;
-				}
+		if ((curNode->left & curNode->right) == 0) {
+			if (outLen + curNode->symbolLen > maxLength) {
+				printf("ERR: Ran out of output space!\n");
+				return outLen;
+			}
+
+			for (int i = 0; i < curNode->symbolLen; ++i, ++outLen) {
 				out[outLen] = curNode->symbol[i];
-				++outLen;
 			}
 
 			// Back to root
-			curNode = table+0;
+			curNode = table;
 		}
 
 		++curBit;
