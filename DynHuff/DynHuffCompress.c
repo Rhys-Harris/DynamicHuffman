@@ -468,7 +468,7 @@ errno_t dynHuffCompressFile(const char *infilename, const char *outfilename) {
 }
 
 errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dataLen) {
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t1 = clock();
 	#endif
 
@@ -479,7 +479,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		return 1;
 	}
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t2 = clock();
 	#endif
 
@@ -503,13 +503,13 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	// 	}
 	// }
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t3 = clock();
 	#endif
 
 	sortEntries(entries, numSymbols);
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t4 = clock();
 	#endif
 
@@ -536,7 +536,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		return 1;
 	}
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t5 = clock();
 	#endif
 
@@ -557,7 +557,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("Fixing parents\n");
 	fixParents(&root);
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t6 = clock();
 	#endif
 
@@ -572,7 +572,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 
 	const int MAX_NODE_DEPTH = nodeHeight(&root);
 	
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t7 = clock();
 	#endif
 
@@ -584,7 +584,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		return 1;
 	}
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t8 = clock();
 	#endif
 
@@ -605,14 +605,14 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("Destroying paths\n");
 	free(paths);
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t9 = clock();
 	#endif
 
 	// Compress tree to a writable table
 	DynWriteNode *nodeList = createWriteTable(&root, numNodes);
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t10 = clock();
 	#endif
 
@@ -628,7 +628,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 		return 1;
 	}
 
-	#ifdef TIME_COMP
+	#if TIME_COMP
 	clock_t t11 = clock();
 	#endif
 
@@ -651,6 +651,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("Destroying output buffer\n");
 	free(out);
 
+	#if TIME_COMP
 	printf("COMP TIME:\n");
 	printf("\tUNIQUE SYMBOLS:\t%lis (%lims)\n", (t2-t1)/CLOCKS_PER_SEC, t2-t1);
 	printf("\tMERGE PATTERNS:\t%lis (%lims)\n", (t3-t2)/CLOCKS_PER_SEC, t3-t2);
@@ -662,6 +663,7 @@ errno_t dynHuffCompress(const byte *text, const char *outfilename, const int dat
 	printf("\tCOMPRESS      :\t%lis (%lims)\n", (t9-t8)/CLOCKS_PER_SEC, t9-t8);
 	printf("\tWRITE TABLE   :\t%lis (%lims)\n", (t10-t9)/CLOCKS_PER_SEC, t10-t9);
 	printf("\tBUFFER WRITE  :\t%lis (%lims)\n", (t11-t10)/CLOCKS_PER_SEC, t11-t10);
+	#endif
 
 	return 0;
 }

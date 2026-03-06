@@ -1,8 +1,12 @@
+#include "../config.h"
+
+#if TIME_DECOMP
+#include <time.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <time.h>
 
 #include "../FRead.h"
 #include "../FWrite.h"
@@ -81,8 +85,10 @@ int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table,
 	int outLen = 0;
 
 	while (curByte < lastByteIndex || (curByte == lastByteIndex && curBit <= lastBitIndex)) {
+		// OPTIMIZE: Shouldn't need to do 7-curBit
 		const byte bit = (byte)(inText[curByte]>>(7-curBit))&1;
 
+		// OPTIMIZE: Can use memory tricks to index straight in
 		if (bit == 1) {
 			curNode = table+curNode->right;
 		} else {
@@ -90,6 +96,7 @@ int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table,
 		}
 
 		// Hit a leaf!
+		// OPTIMIZE: Can AND both pointers then check against 0
 		if (curNode->left == 0 && curNode->right == 0) {
 			for (int i = 0; i < curNode->symbolLen; ++i) {
 				if (outLen == maxLength) {
@@ -105,10 +112,15 @@ int decompress(const byte *inText, byte *out, int maxLength, DynReadNode *table,
 		}
 
 		++curBit;
-		if (curBit == 8) {
-			curBit = 0;
-			++curByte;
-		}
+
+		const byte atEndOfByte = curBit == 8;
+		curByte += atEndOfByte; // If at end of byte, increment curByte
+		curBit <<= (atEndOfByte<<3); // If at end of byte, shift all data to clear byte
+
+		// if (curBit == 8) {
+		// 	curBit = 0;
+		// 	++curByte;
+		// }
 	}
 
 	return outLen;
@@ -128,6 +140,10 @@ errno_t dynHuffDecompressFile(const char *infilename, const char *outfilename) {
 }
 
 errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
+	#if TIME_DECOMP
+	clock_t t1 = clock();
+	#endif
+
 	// Get metadata
 	printf("Getting metadata\n");
 	const int numNodes = readInt32FromBuff(0, (const byte*)compText);
@@ -139,6 +155,10 @@ errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 	printf("Original data length %i\n", dataLen);
 	printf("Last byte index %i\n", lastByteIndex);
 	printf("Last bit index %i\n", lastBitIndex);
+
+	#if TIME_DECOMP
+	clock_t t2 = clock();
+	#endif
 
 	// Convert raw data to read nodes table
 	printf("Allocating table\n");
@@ -158,6 +178,10 @@ errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 	// 		printf("NODE: '%c%c' L%i P%i R%i\n", n->symbol[0], n->symbol[0], n->symbolLen, n->parent, n->isRight);
 	// 	}
 	// }
+
+	#if TIME_DECOMP
+	clock_t t3 = clock();
+	#endif
 
 	DynReadNode *table = convertToReadableTable(numNodes, rawTable);
 	if (table == NULL) {
@@ -183,6 +207,10 @@ errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 	printf("Creating output buffer\n");
 	byte *out = calloc(dataLen, 1);
 
+	#if TIME_DECOMP
+	clock_t t4 = clock();
+	#endif
+
 	printf("Decompressing...\n");
 	int outLen = decompress(inText, out, dataLen, table, lastByteIndex, lastBitIndex);
 	if (outLen != dataLen) {
@@ -191,6 +219,10 @@ errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 		printf("\tGot:\t\t%i\n", outLen);
 		return 1;
 	}
+
+	#if TIME_DECOMP
+	clock_t t5 = clock();
+	#endif
 
 	printf("Destroying table\n");
 	free(table);
@@ -204,6 +236,14 @@ errno_t dynHuffDecompress(const byte *compText, const char *outfilename) {
 
 	printf("Destroying output buffer\n");
 	free(out);
+
+	#if TIME_DECOMP
+	printf("DECOMP TIME:\n");
+	printf("\tREAD METADATA  :\t%lis (%lims)\n", (t2-t1)/CLOCKS_PER_SEC, t2-t1);
+	printf("\tREAD NODE TABLE:\t%lis (%lims)\n", (t3-t2)/CLOCKS_PER_SEC, t3-t2);
+	printf("\tCONVERT TABLE  :\t%lis (%lims)\n", (t4-t3)/CLOCKS_PER_SEC, t4-t3);
+	printf("\tDECOMPRESS     :\t%lis (%lims)\n", (t5-t4)/CLOCKS_PER_SEC, t5-t4);
+	#endif
 
 	return 0;
 }
